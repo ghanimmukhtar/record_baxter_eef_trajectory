@@ -17,7 +17,7 @@ find_package(Boost REQUIRED COMPONENTS system filesystem)
 include_directories(SYSTEM ${Boost_INCLUDE_DIR})
 
 catkin_package(
- INCLUDE_DIRS include
+ #INCLUDE_DIRS include
 )
 
 
