@@ -1,0 +1,13 @@
+<launch>
+  <arg name="use_sim_time" default="true"/>
+
+  <!-- set use_sim_time flag -->
+  <group if="$(arg use_sim_time)">
+    <param name="/use_sim_time" value="true" />
+  </group>
+
+  <param name="duration" value="2.0"/>
+
+  <node name="record_baxter_eef_trajectory" pkg="record_baxter_eef_trajectory" type="record_baxter_eef_trajectory" output="screen" launch-prefix="gdb -ex run --args">
+  </node>
+</launch>

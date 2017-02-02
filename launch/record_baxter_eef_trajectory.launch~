@@ -1,0 +1,8 @@
+<launch>
+  <arg name="use_sim_time" default="true"/>
+
+  <param name="duration" value="2.0"/>
+
+  <node name="record_baxter_eef_trajectory" pkg="record_baxter_eef_trajectory" type="record_baxter_eef_trajectory" output="screen" launch-prefix="gdb -ex run --args">
+  </node>
+</launch>
