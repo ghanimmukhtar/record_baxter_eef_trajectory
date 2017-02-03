@@ -63,6 +63,7 @@ int main(int argc, char** argv)
 #include <sensor_msgs/JointState.h>
 #include <tf/transform_listener.h>
 #include <baxter_core_msgs/EndpointState.h>
+#include <baxter_core_msgs/DigitalIOState.h>
 #include <geometry_msgs/PoseStamped.h>
 
 #include <vector>
@@ -76,6 +77,7 @@ int main(int argc, char** argv)
 std::vector<double> left_end_effector_pose(6);
 geometry_msgs::Pose left_eef_pose;
 tf::Quaternion my_rpy_orientation;
+int8_t pressed;
 
 void left_eef_Callback(baxter_core_msgs::EndpointState l_eef_feedback){
     left_end_effector_pose.clear();
@@ -92,12 +94,16 @@ void left_eef_Callback(baxter_core_msgs::EndpointState l_eef_feedback){
     left_end_effector_pose.push_back(yaw);
 }
 
+void left_cuf_Callback(baxter_core_msgs::DigitalIOState l_cuf_feedbcak){
+    pressed = l_cuf_feedbcak.state;
+}
+
 int main(int argc, char** argv)
 {
     ros::init(argc, argv, "record_baxter_eef_trajectory");
     ros::NodeHandle node;
     ros::Subscriber sub_l_eef_msg = node.subscribe<baxter_core_msgs::EndpointState>("/robot/limb/left/endpoint_state", 10, left_eef_Callback);
-    double duration = atof(argv[1]);
+    ros::Subscriber sub_l_cuf_msg = node.subscribe<baxter_core_msgs::DigitalIOState>("/robot/digital_io/left_lower_cuff/state", 10, left_cuf_Callback);
     //node.getParam("duration", duration);
     std::ofstream file("./trajectorybackdrive");
 
@@ -105,38 +111,47 @@ int main(int argc, char** argv)
     spinner.start();
 
     std::vector<double> old_values = left_end_effector_pose;
-    double norm, whole_time;
+    double norm;
+    pressed = false;
+    bool release = true, toggle = false;
+    int number_paths = 0;
     if(file.is_open()){
-        double begin = ros::Time::now().toSec();
-        ROS_ERROR_STREAM("recording here ........., begin time is: " << begin);
         ros::Rate rate(50.0);
+        rate.sleep();
         std::cout << "go go go" << std::endl;
-        while ((ros::Time::now().toSec() - begin) < duration)
+        while (ros::ok())
         {
-            //get angles
-            std::vector<double> current_values = left_end_effector_pose;
-            norm = 0;
-            for(int i = 0; i < old_values.size(); i++){
-                norm = norm + (old_values[i] - current_values[i]) * (old_values[i] - current_values[i]);
+            if(pressed){
+                if(release){
+                    release = false;
+                    toggle = true;
+                }
+                number_paths += 1;
+                //get eef pose
+                std::vector<double> current_values = left_end_effector_pose;
+                norm = 0;
+                for(int i = 0; i < old_values.size(); i++){
+                    norm = norm + (old_values[i] - current_values[i]) * (old_values[i] - current_values[i]);
+                }
+                if (current_values[0]*current_values[0] > 0.00001 && norm > 0.0005){
+                    for(int i = 0; i < current_values.size(); i++)
+                        file << current_values[i] << ",";
+                    old_values = current_values;
+                }
             }
-            if (current_values[0]*current_values[0] > 0.00001 && norm > 0.0005){
-                for(int i = 0; i < current_values.size(); i++)
-                    file << current_values[i] << " ";
+            else
+                release = true;
+            if(toggle && !pressed){
                 file << "\n";
-                old_values = current_values;
+                toggle = false;
             }
             rate.sleep();
-            ROS_ERROR_STREAM("recording here ........., ros time now is: " << ros::Time::now().toSec());
-            ROS_WARN("******************************************************");
-            ROS_ERROR_STREAM("recording here ........., begin time is: " << begin);
-            ROS_ERROR_STREAM("output of the while condition is: " << ((ros::Time::now().toSec() - begin) < duration));
         }
     }
     else{
         std::cerr << "impossible to open the file" << std::endl;
         exit(1);
     }
-    ROS_ERROR_STREAM("finished here ........., time now is: " << whole_time << " and duration is: " << duration);
     file.close();
     return 0;
 }
