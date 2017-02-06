@@ -68,11 +68,12 @@ void imageCb(const sensor_msgs::ImageConstPtr& msg)
     my_detector.setDictionary("ARUCO");
     my_detector.detect(pic,markers,camera_char,0.04);
     if (!markers.empty()){
+        //ROS_WARN_STREAM("marker size is: " << markers[0].size());
         markers[0].draw(pic,cv::Scalar(94.0, 206.0, 165.0, 0.0));
         markers[0].calculateExtrinsics(0.04,camera_char,false);
-        my_x = (int) markers[0][0].x;
-        my_y = (int) markers[0][0].y;
-        circle(pic, cv::Point(markers[0][0].x, markers[0][0].y), 10, CV_RGB(255,0,0));
+        my_x = (int) (markers[0][0].x + markers[0][2].x)/2;
+        my_y = (int) (markers[0][0].y + markers[0][2].y)/2;
+        circle(pic, cv::Point((markers[0][0].x + markers[0][2].x)/2, (markers[0][0].y + markers[0][2].y)/2), 10, CV_RGB(255,0,0));
     }
     imshow("ShowMarker", pic);
     waitKey(1);
