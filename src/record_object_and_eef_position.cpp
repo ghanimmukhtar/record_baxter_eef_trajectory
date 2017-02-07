@@ -62,6 +62,7 @@ int main(int argc, char **argv)
   ros::Subscriber sub_l_eef_msg = n.subscribe<baxter_core_msgs::EndpointState>("/robot/limb/left/endpoint_state", 10, left_eef_Callback);
   ros::Subscriber sub_l_cuf_msg = n.subscribe<baxter_core_msgs::DigitalIOState>("/robot/digital_io/left_lower_cuff/state", 10, left_cuf_Callback);
   ros::Subscriber sub_l_lower_button = n.subscribe<baxter_core_msgs::DigitalIOState>("/robot/digital_io/left_lower_button/state", 10, left_lower_button_Callback);
+  ros::Publisher image_publisher = n.advertise<sensor_msgs::Image>("/robot/xdisplay", 1);
 
   parameters.set_object_file_name("./object_positions");
   parameters.set_left_eef_trajectory_file_name("./eef_trajectory_recorder");
@@ -74,7 +75,7 @@ int main(int argc, char **argv)
   std::ofstream left_eef_trajectory_file("eef_trajectory_recorder.csv");
 
 
-  record_traj_and_object_position(parameters, left_eef_trajectory_file, object_file);
+  record_traj_and_object_position(parameters, left_eef_trajectory_file, object_file, image_publisher);
 
   left_eef_trajectory_file.close();
   object_file.close();

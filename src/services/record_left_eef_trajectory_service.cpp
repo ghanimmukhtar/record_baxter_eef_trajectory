@@ -62,6 +62,7 @@ bool left_eef_trajectory_recording(record_baxter_eef_trajectory::Recordtraj::Req
     ros::Subscriber sub_l_eef_msg = nh.subscribe<baxter_core_msgs::EndpointState>("/robot/limb/left/endpoint_state", 10, left_eef_Callback);
     ros::Subscriber sub_l_cuf_msg = nh.subscribe<baxter_core_msgs::DigitalIOState>("/robot/digital_io/left_lower_cuff/state", 10, left_cuf_Callback);
     ros::Subscriber sub_l_lower_button = nh.subscribe<baxter_core_msgs::DigitalIOState>("/robot/digital_io/left_lower_button/state", 10, left_lower_button_Callback);
+    ros::Publisher image_publisher = nh.advertise<sensor_msgs::Image>("/robot/xdisplay", 1);
 
     parameters.set_object_file_name("./object_positions");
     parameters.set_left_eef_trajectory_file_name("./eef_trajectory_recorder");
@@ -77,7 +78,7 @@ bool left_eef_trajectory_recording(record_baxter_eef_trajectory::Recordtraj::Req
     ros::Rate rate(50.0);
     rate.sleep();
     while(ros::ok() && req.start){
-        record_traj_and_object_position(parameters, left_eef_trajectory_file, object_file);
+        record_traj_and_object_position(parameters, left_eef_trajectory_file, object_file, image_publisher);
         rate.sleep();
     }
     left_eef_trajectory_file.close();

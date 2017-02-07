@@ -79,6 +79,7 @@ void locate_left_eef_pose(baxter_core_msgs::EndpointState& l_eef_feedback, Data_
 
 }
 
+//Convert object position from camera frame to robot frame
 void convert_object_position_to_robot_base(Eigen::Vector3d& object_pose_in_camera_frame, Eigen::Vector3d& object_pose_in_robot_frame){
     tf::TransformListener listener;
     geometry_msgs::PointStamped camera_point;
@@ -109,8 +110,18 @@ void convert_object_position_to_robot_base(Eigen::Vector3d& object_pose_in_camer
             base_point.point.z;
 }
 
+//Display some images on baxter screen to reflect what he is doing
+void dispaly_image(std::string path, ros::Publisher& image_pub){
+    cv::Mat img = cv::imread(path);
+    sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", img).toImageMsg();
+    image_pub.publish(msg);
+}
+
 //record marker position (object position) if changed in the specified file
-void record_traj_and_object_position(Data_config& parameters, std::ofstream& left_eef_trajectory_file, std::ofstream& object_file){
+void record_traj_and_object_position(Data_config& parameters,
+                                     std::ofstream& left_eef_trajectory_file,
+                                     std::ofstream& object_file,
+                                     ros::Publisher& image_pub){
     /*std::string pPath;
     pPath = getenv ("PWD");
     std::string path_to_file;
@@ -124,14 +135,15 @@ void record_traj_and_object_position(Data_config& parameters, std::ofstream& lef
     parameters.set_release(true);
     parameters.set_toggle(false);
 
-
+    std::string working_image_path = "/home/ghanim/git/catkin_ws/src/baxter_examples/share/images/working.jpg";
+    std::string not_working_image_path = "/home/ghanim/git/catkin_ws/src/baxter_examples/share/images/finished.jpg";
 
     if(object_file.is_open() && left_eef_trajectory_file.is_open()){
         ros::Rate rate(50.0);
         rate.sleep();
         while(ros::ok()){
         //ROS_INFO("go go go");
-
+            dispaly_image(not_working_image_path, image_pub);
             if(parameters.get_pressed() && parameters.get_lower_botton_pressed()){
                 if(parameters.get_release()){
                     parameters.set_release(false);
@@ -148,7 +160,8 @@ void record_traj_and_object_position(Data_config& parameters, std::ofstream& lef
                 Eigen::VectorXd current_values(6);
                 current_values = parameters.get_left_eef_pose_rpy();
                 if ((current_values - old_values).norm() > parameters.get_epsilon()){
-                    ROS_ERROR("I am recording ...........");
+                    //ROS_ERROR("I am recording ...........");
+                    dispaly_image(working_image_path, image_pub);
                     left_eef_trajectory_file << current_values(0) << ","
                                              << current_values(1) << ","
                                              << current_values(2) << ","
