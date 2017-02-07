@@ -79,6 +79,36 @@ void locate_left_eef_pose(baxter_core_msgs::EndpointState& l_eef_feedback, Data_
 
 }
 
+void convert_object_position_to_robot_base(Eigen::Vector3d& object_pose_in_camera_frame, Eigen::Vector3d& object_pose_in_robot_frame){
+    tf::TransformListener listener;
+    geometry_msgs::PointStamped camera_point;
+    geometry_msgs::PointStamped base_point;
+    camera_point.header.frame_id = "camera_link";
+
+    //we'll just use the most recent transform available for our simple example
+    camera_point.header.stamp = ros::Time();
+
+    //just an arbitrary point in space
+    camera_point.point.x = object_pose_in_camera_frame(0);
+    camera_point.point.y = object_pose_in_camera_frame(1);
+    camera_point.point.z = object_pose_in_camera_frame(2);
+
+    try{
+
+        listener.transformPoint("base", camera_point, base_point);
+
+        ROS_INFO("camera_link: (%.2f, %.2f. %.2f) -----> base_link: (%.2f, %.2f, %.2f) at time %.2f",
+                 camera_point.point.x, camera_point.point.y, camera_point.point.z,
+                 base_point.point.x, base_point.point.y, base_point.point.z, base_point.header.stamp.toSec());
+    }
+    catch(tf::TransformException& ex){
+        ROS_ERROR("Received an exception trying to transform a point from \"base_laser\" to \"base_link\": %s", ex.what());
+    }
+    object_pose_in_robot_frame << base_point.point.x,
+            base_point.point.y,
+            base_point.point.z;
+}
+
 //record marker position (object position) if changed in the specified file
 void record_traj_and_object_position(Data_config& parameters, std::ofstream& left_eef_trajectory_file, std::ofstream& object_file){
     /*std::string pPath;
@@ -108,11 +138,11 @@ void record_traj_and_object_position(Data_config& parameters, std::ofstream& lef
                     parameters.set_toggle(true);
                 }
                 //wait till there is no (NaN values)
-                /*while(parameters.get_object_position()(0) != parameters.get_object_position()(0) ||
+                while(parameters.get_object_position()(0) != parameters.get_object_position()(0) ||
                       parameters.get_object_position()(1) != parameters.get_object_position()(1) ||
                       parameters.get_object_position()(2) != parameters.get_object_position()(2)){
                     ROS_ERROR("I am in waiting limbo ...........");
-                }*/
+                }
 
                 //get current eef pose
                 Eigen::VectorXd current_values(6);
@@ -127,9 +157,11 @@ void record_traj_and_object_position(Data_config& parameters, std::ofstream& lef
                                              << current_values(5) << ",";
                     old_values = current_values;
                     //while saving end effector changes register object position concurrently
-                    /*object_file << parameters.get_object_position()(0) << ","
-                                << parameters.get_object_position()(1) << ","
-                                << parameters.get_object_position()(2) << ",";*/
+                    Eigen::Vector3d object_position_in_robot_frame;
+                    convert_object_position_to_robot_base(parameters.get_object_position(), object_position_in_robot_frame);
+                    object_file << object_position_in_robot_frame(0) << ","
+                                << object_position_in_robot_frame(1) << ","
+                                << object_position_in_robot_frame(2) << ",";
                 }
 
             }
