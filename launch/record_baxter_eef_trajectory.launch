@@ -1,13 +1,7 @@
 <launch>
-  <arg name="use_sim_time" default="true"/>
 
-  <!-- set use_sim_time flag -->
-  <group if="$(arg use_sim_time)">
-    <param name="/use_sim_time" value="true" />
-  </group>
+  <param name="camera_param_path" value="/home/ghanim/git/automatic_camera_robot_cal/data/camera_param_baxter.xml"/>
 
-  <param name="duration" value="2.0"/>
-
-  <node name="record_baxter_eef_trajectory" pkg="record_baxter_eef_trajectory" type="record_baxter_eef_trajectory" output="screen" launch-prefix="gdb -ex run --args">
+  <node name="record_eef_trajectory_and_object_position_service" pkg="record_baxter_eef_trajectory" type="record_left_eef_trajectory_service" output="screen" launch-prefix="gdb -ex run --args">
   </node>
 </launch>

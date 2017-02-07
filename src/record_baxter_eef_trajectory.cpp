@@ -55,6 +55,7 @@ int main(int argc, char** argv)
     double norm;
     pressed = false;
     bool release = true, toggle = false;
+    double epsilon = 0.01;
     if(file.is_open()){
         ros::Rate rate(50.0);
         rate.sleep();
@@ -69,12 +70,15 @@ int main(int argc, char** argv)
                 //get eef pose
                 std::vector<double> current_values = left_end_effector_pose;
                 norm = 0;
-                for(int i = 0; i < old_values.size(); i++){
-                    norm = norm + (old_values[i] - current_values[i]) * (old_values[i] - current_values[i]);
+                std::vector<double>::iterator itr;
+                int j = 0;
+                for(itr = old_values.begin(); itr < old_values.end(); ++itr){
+                    norm = norm + (*itr - current_values[j]) * (*itr - current_values[j]);
+                    j += 1;
                 }
-                if (current_values[0]*current_values[0] > 0.00001 && norm > 0.0005){
-                    for(int i = 0; i < current_values.size(); i++)
-                        file << current_values[i] << ",";
+                if (norm > epsilon){
+                    for(itr = current_values.begin(); itr < current_values.end(); ++itr)
+                        file << (*itr) << ",";
                     old_values = current_values;
                 }
             }
