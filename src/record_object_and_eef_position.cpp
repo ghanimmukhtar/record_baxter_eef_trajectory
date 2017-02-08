@@ -53,7 +53,7 @@ int main(int argc, char **argv)
 
   image_transport::ImageTransport it_(n);
   //nh.getParam("camera_param_path", parameters.get_camera_param_path());
-  parameters.get_camera_char().readFromXMLFile("/home/ghanim/git/automatic_camera_robot_cal/data/camera_param_baxter.xml");
+  parameters.get_camera_char().readFromXMLFile("/home/maestre/baxter_ws/src/record_baxter_eef_trajectory/data/camera_param_baxter.xml");
 
   //subscribers
   image_transport::Subscriber in_image = it_.subscribe("/camera/rgb/image_rect_color", 1, imageCb);
