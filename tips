@@ -1,0 +1,76 @@
+How to use the Baxter
+=====================
+
+Setup commands
+
+kinect
+
+####  launch kinect:
+
+roslaunch freenect_launch freenect.launch rgb_frame_id:=camera_rgb_optical_frame depth_frame_id:=camera_depth_optical_frame
+
+
+((((((
+if camera not calibrated:
+
+launch calibration
+
+roslaunch baxter_kinect_calibration baxter_bundle_calibrate_xtion.launch
+
+view onlive results: 
+
+rosrun tf tf_echo /torso /camera_link
+
+once we have the matrix transformation from tf tf_echo, we copy the translation and rotation part and publish a static transformation:
+
+e.g.:
+
+matrix from tf_echo:
+
+Translation: [0.760, 0.799, 0.907]
+- Rotation: in Quaternion [0.336, 0.351, -0.588, 0.647]
+            in RPY (radian) [0.043, 1.014, -1.450]
+            in RPY (degree) [2.492, 58.080, -83.103]
+
+static transformation:
+
+rosrun tf static_transform_publisher 0.760, 0.799, 0.907 0.336, 0.351, -0.588, 0.647 /world /camera_link 10
+
+there is an offset in the translation, you can modify (by hand) this values until you get the desired accuracy:
+
+*rosrun tf stic_transform_publisher 0.810, 0.809, 0.747 0.336, 0.351, -0.588, 0.647 /world /camera_link 10
+
+)))))))))
+
+#### launch affordance example:
+
+First, launch the camera node (se above)
+
+Second, launch the perception node to extract coordinate points of the objects of intereste (in Omar's code is called poi):
+
+rosrun pr2_ransac_supervoxels pr2_ransac_supervoxels_node
+
+Third, launch the experiment manager (kind of menu that choses an object and action to perform on) to control the perception, action execution and effect detection.
+
+roslaunch baxter_experiment_manager experiment_launcher_innorobot.launch
+
+
+#### Baxter arm modes:
+
+http://sdk.rethinkrobotics.com/wiki/Arm_Control_Modes
+
+The suggested one is the joint control mode.
+
+to see an example see Omar's baxter_basic_action node, scripts: baxter_basic_actions_ik_moveit, joint_position_basic_actions and remember to copy ik_solver.py because this one performs the IK, cartersian to joint space.
+
+
+/// our calibration stuff
+1.153, 0.22, 0.3, -0.420, 0.001, 0.907, 0.028
+- Rotation: in Quaternion [-0.420, 0.001, 0.907, 0.028]
+            in RPY (radian) [-0.033, 0.866, 3.064]
+            in RPY (degree) [-1.886, 49.598, 175.533]
+
+
+
+
+
