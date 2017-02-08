@@ -83,9 +83,11 @@ void locate_left_eef_pose(baxter_core_msgs::EndpointState& l_eef_feedback, Data_
 void convert_object_position_to_robot_base(Eigen::Vector3d& object_pose_in_camera_frame, Eigen::Vector3d& object_pose_in_robot_frame){
     tf::TransformListener listener;
     tf::StampedTransform stamped_transform;
-
+    //std::string child_frame = "/camera_depth_optical_frame";
+    std::string child_frame = "/camera_rgb_optical_frame";
+    std::string parent_frame = "base";
     try{
-        listener.lookupTransform("/camera_link", "/base",
+        listener.lookupTransform(child_frame, parent_frame,
                                  ros::Time::now(), stamped_transform);
     }
     catch (tf::TransformException &ex) {
@@ -95,7 +97,7 @@ void convert_object_position_to_robot_base(Eigen::Vector3d& object_pose_in_camer
 
     geometry_msgs::PointStamped camera_point;
     geometry_msgs::PointStamped base_point;
-    camera_point.header.frame_id = "/camera_link";
+    camera_point.header.frame_id = child_frame;
 
     //we'll just use the most recent transform available for our simple example
     camera_point.header.stamp = ros::Time();
@@ -107,9 +109,9 @@ void convert_object_position_to_robot_base(Eigen::Vector3d& object_pose_in_camer
 
     try{
 
-        listener.transformPoint("/base", camera_point, base_point);
+        listener.transformPoint(parent_frame, camera_point, base_point);
 
-        ROS_INFO("camera_link: (%.2f, %.2f. %.2f) -----> base_link: (%.2f, %.2f, %.2f) at time %.2f",
+        ROS_INFO("camera_depth_optical_frame: (%.2f, %.2f. %.2f) -----> base_link: (%.2f, %.2f, %.2f) at time %.2f",
                  camera_point.point.x, camera_point.point.y, camera_point.point.z,
                  base_point.point.x, base_point.point.y, base_point.point.z, base_point.header.stamp.toSec());
     }
@@ -154,7 +156,7 @@ void record_traj_and_object_position(Data_config& parameters,
         rate.sleep();
         while(ros::ok()){
         //ROS_INFO("go go go");
-            dispaly_image(not_working_image_path, image_pub);
+            //dispaly_image(not_working_image_path, image_pub);
             if(parameters.get_pressed() && parameters.get_lower_botton_pressed()){
                 if(parameters.get_release()){
                     parameters.set_release(false);
@@ -173,7 +175,7 @@ void record_traj_and_object_position(Data_config& parameters,
                 if ((current_values - old_values).norm() > parameters.get_epsilon()){
                     srand((unsigned)time(NULL));
                     //ROS_ERROR("I am recording ...........");
-                    dispaly_image(working_image_path, image_pub);
+                    //dispaly_image(working_image_path, image_pub);
                     left_eef_trajectory_file << current_values(0) << ","
                                              << current_values(1) << ","
                                              << current_values(2) << ","
@@ -183,11 +185,11 @@ void record_traj_and_object_position(Data_config& parameters,
                     old_values = current_values;
                     //while saving end effector changes register object position concurrently
                     Eigen::Vector3d object_position_in_robot_frame;
-                    Eigen::Vector3d test_object_pose;
+                    /*Eigen::Vector3d test_object_pose;
                     test_object_pose << ((double)rand()/(double)RAND_MAX),
                             ((double)rand()/(double)RAND_MAX),
-                            ((double)rand()/(double)RAND_MAX);
-                    convert_object_position_to_robot_base(test_object_pose, object_position_in_robot_frame);
+                            ((double)rand()/(double)RAND_MAX);*/
+                    convert_object_position_to_robot_base(parameters.get_object_position(), object_position_in_robot_frame);
                     object_file << object_position_in_robot_frame(0) << ","
                                 << object_position_in_robot_frame(1) << ","
                                 << object_position_in_robot_frame(2) << ",";
@@ -201,7 +203,7 @@ void record_traj_and_object_position(Data_config& parameters,
                     parameters.set_lower_button_pressed(false);
                 }
             }
-            if(parameters.get_toggle() && !parameters.get_pressed()){
+            if(parameters.get_toggle() && !parameters.get_lower_botton_pressed()){
                 left_eef_trajectory_file << "\n";
                 object_file << "\n";
                 parameters.set_toggle(false);
