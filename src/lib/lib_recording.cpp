@@ -82,9 +82,20 @@ void locate_left_eef_pose(baxter_core_msgs::EndpointState& l_eef_feedback, Data_
 //Convert object position from camera frame to robot frame
 void convert_object_position_to_robot_base(Eigen::Vector3d& object_pose_in_camera_frame, Eigen::Vector3d& object_pose_in_robot_frame){
     tf::TransformListener listener;
+    tf::StampedTransform stamped_transform;
+
+    try{
+        listener.lookupTransform("/camera_link", "/base",
+                                 ros::Time::now(), stamped_transform);
+    }
+    catch (tf::TransformException &ex) {
+        ROS_ERROR("%s",ex.what());
+        ros::Duration(1.0).sleep();
+    }
+
     geometry_msgs::PointStamped camera_point;
     geometry_msgs::PointStamped base_point;
-    camera_point.header.frame_id = "camera_link";
+    camera_point.header.frame_id = "/camera_link";
 
     //we'll just use the most recent transform available for our simple example
     camera_point.header.stamp = ros::Time();
@@ -96,7 +107,7 @@ void convert_object_position_to_robot_base(Eigen::Vector3d& object_pose_in_camer
 
     try{
 
-        listener.transformPoint("base", camera_point, base_point);
+        listener.transformPoint("/base", camera_point, base_point);
 
         ROS_INFO("camera_link: (%.2f, %.2f. %.2f) -----> base_link: (%.2f, %.2f, %.2f) at time %.2f",
                  camera_point.point.x, camera_point.point.y, camera_point.point.z,
@@ -160,6 +171,7 @@ void record_traj_and_object_position(Data_config& parameters,
                 Eigen::VectorXd current_values(6);
                 current_values = parameters.get_left_eef_pose_rpy();
                 if ((current_values - old_values).norm() > parameters.get_epsilon()){
+                    srand((unsigned)time(NULL));
                     //ROS_ERROR("I am recording ...........");
                     dispaly_image(working_image_path, image_pub);
                     left_eef_trajectory_file << current_values(0) << ","
@@ -171,7 +183,11 @@ void record_traj_and_object_position(Data_config& parameters,
                     old_values = current_values;
                     //while saving end effector changes register object position concurrently
                     Eigen::Vector3d object_position_in_robot_frame;
-                    convert_object_position_to_robot_base(parameters.get_object_position(), object_position_in_robot_frame);
+                    Eigen::Vector3d test_object_pose;
+                    test_object_pose << ((double)rand()/(double)RAND_MAX),
+                            ((double)rand()/(double)RAND_MAX),
+                            ((double)rand()/(double)RAND_MAX);
+                    convert_object_position_to_robot_base(test_object_pose, object_position_in_robot_frame);
                     object_file << object_position_in_robot_frame(0) << ","
                                 << object_position_in_robot_frame(1) << ","
                                 << object_position_in_robot_frame(2) << ",";
