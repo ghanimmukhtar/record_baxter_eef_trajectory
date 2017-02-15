@@ -48,6 +48,7 @@ struct Parameters {
     bool release = true, toggle = false, l_lower_button_pressed = false;
     double epsilon = 0.01;
     std::string camera_param_path;
+    double the_rate = 50.0;
 };
 
 class Data_config{
@@ -140,6 +141,10 @@ public:
         return params.epsilon;
     }
 
+    double& get_the_rate(){
+        return params.the_rate;
+    }
+
     std::string& get_camera_param_path(){
         return params.camera_param_path;
     }
@@ -230,6 +235,10 @@ public:
 
     void set_epsilon(double& epsilon){
         params.epsilon = epsilon;
+    }
+
+    void set_the_rate(double& the_rate){
+        params.the_rate = the_rate;
     }
 };
 

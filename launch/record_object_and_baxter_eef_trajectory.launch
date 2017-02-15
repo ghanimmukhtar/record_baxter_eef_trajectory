@@ -1,0 +1,7 @@
+<launch>
+
+  <param name="the_rate" value="10.0"/>
+
+  <node name="record_eef_trajectory_and_object_position_service" pkg="record_baxter_eef_trajectory" type="record_object_and_eef_position" output="screen">
+  </node>
+</launch>

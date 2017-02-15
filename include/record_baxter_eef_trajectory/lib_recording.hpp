@@ -56,8 +56,12 @@ void convert_object_position_to_robot_base(Eigen::Vector3d& object_pose_in_camer
  * */
 void dispaly_image(std::string path, ros::Publisher &image_pub);
 
+void convert_whole_object_positions_vector(std::vector<Eigen::Vector4d>& object_positions_vector, std::vector<std::vector<double> > &output_of_conversion);
+void write_data(std::vector<std::vector<double>>& left_eef_trajectory_and_object_vector,
+                std::vector<std::vector<double>>& object_positions_vector, std::ofstream& the_file);
+
 /*Recording method that uses all relevant parameters to control starting/stopping of recording
  * input: the Data_config class
  * return: nothing but it record the trajectory and object position in relevant files
  * */
-void record_traj_and_object_position(Data_config& parameters, ofstream &left_eef_trajectory_file, ofstream &object_file, ros::Publisher &image_pub);
+void record_traj_and_object_position(Data_config& parameters, std::vector<std::vector<double> > &left_eef_trajectory, ros::Publisher &image_pub, ofstream &the_file);

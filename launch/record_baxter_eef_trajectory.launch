@@ -1,6 +1,6 @@
 <launch>
 
-  <param name="camera_param_path" value="/home/ghanim/git/automatic_camera_robot_cal/data/camera_param_baxter.xml"/>
+  <param name="camera_param_path" value="/home/maestre/baxter_ws/src/record_baxter_eef_trajectory/data/camera_param_baxter.xml"/>
 
   <node name="record_eef_trajectory_and_object_position_service" pkg="record_baxter_eef_trajectory" type="record_left_eef_trajectory_service" output="screen" launch-prefix="gdb -ex run --args">
   </node>

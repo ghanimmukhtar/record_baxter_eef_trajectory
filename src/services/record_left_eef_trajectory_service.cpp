@@ -74,11 +74,12 @@ bool left_eef_trajectory_recording(record_baxter_eef_trajectory::Recordtraj::Req
     std::ofstream object_file("object_positions");
     std::ofstream left_eef_trajectory_file;
     left_eef_trajectory_file.open("/home/ghanim/git/catkin_ws/eef_trajectory_recorder.csv");
+    std::vector<std::vector<double>> outputs;
 
     ros::Rate rate(50.0);
     rate.sleep();
     while(ros::ok() && req.start){
-        record_traj_and_object_position(parameters, left_eef_trajectory_file, object_file, image_publisher);
+        record_traj_and_object_position(parameters, outputs, image_publisher, left_eef_trajectory_file);
         rate.sleep();
     }
     left_eef_trajectory_file.close();

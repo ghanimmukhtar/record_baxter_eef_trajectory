@@ -64,22 +64,20 @@ The suggested one is the joint control mode.
 to see an example see Omar's baxter_basic_action node, scripts: baxter_basic_actions_ik_moveit, joint_position_basic_actions and remember to copy ik_solver.py because this one performs the IK, cartersian to joint space.
 
 
-/// our calibration stuff for camera infront of the table
-1.21 0.2 0.33 -0.438 -0.031 0.898 -0.016 
-- Rotation: in Quaternion [-0.438 -0.031 0.898 -0.016 ]
-            in RPY (radian) [-0.066, 0.907, -3.137]
-            in RPY (degree) [-3.782, 51.983, -179.747]
+/// our calibration stuff for camera infront of the table with regard to /camera_link frame
+1.267 0.14 0.3 -0.355 0.014 0.935 -0.000
+- Rotation: in Quaternion [-0.355, 0.014, 0.935, -0.000]
+            in RPY (radian) [0.034, 0.726, -3.128]
+            in RPY (degree) [1.965, 41.588, -179.196]
 
-rotation matrix:
-[ INFO] [1486646729.780078930]: element in row: 0 column: 0 is: -0.615594
-[ INFO] [1486646729.780155203]: element in row: 0 column: 1 is: 0.0559219
-[ INFO] [1486646729.780178521]: element in row: 0 column: 2 is: -0.786077
-[ INFO] [1486646729.780197333]: element in row: 1 column: 0 is: -0.00158085
-[ INFO] [1486646729.780215311]: element in row: 1 column: 1 is: -0.997565
-[ INFO] [1486646729.780233169]: element in row: 1 column: 2 is: -0.0697293
-[ INFO] [1486646729.780250111]: element in row: 2 column: 0 is: -0.788062
-[ INFO] [1486646729.780267894]: element in row: 2 column: 1 is: -0.0416823
-[ INFO] [1486646729.780284912]: element in row: 2 column: 2 is: 0.614184
+/// our calibration stuff for camera infront of the table with regard to /camera_rgb_optical_frame
+1.267, 0.185, 0.299 0.652, 0.638, -0.297, -0.283
+- Translation: [1.267, 0.185, 0.299]
+- Rotation: in Quaternion [0.652, 0.638, -0.297, -0.283]
+            in RPY (radian) [-2.297, 0.026, 1.561]
+            in RPY (degree) [-131.589, 1.500, 89.431]
+
+
 
 
 

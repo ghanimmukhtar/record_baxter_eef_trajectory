@@ -85,15 +85,15 @@ void convert_object_position_to_robot_base(Eigen::Vector3d& object_pose_in_camer
     tf::StampedTransform stamped_transform;
     //std::string child_frame = "/camera_depth_optical_frame";
     std::string child_frame = "/camera_rgb_optical_frame";
-    std::string parent_frame = "base";
-    try{
+    std::string parent_frame = "/world";
+    /*try{
         listener.lookupTransform(child_frame, parent_frame,
                                  ros::Time::now(), stamped_transform);
     }
     catch (tf::TransformException &ex) {
         ROS_ERROR("%s",ex.what());
         ros::Duration(1.0).sleep();
-    }
+    }*/
 
     geometry_msgs::PointStamped camera_point;
     geometry_msgs::PointStamped base_point;
@@ -107,8 +107,10 @@ void convert_object_position_to_robot_base(Eigen::Vector3d& object_pose_in_camer
     camera_point.point.y = object_pose_in_camera_frame(1);
     camera_point.point.z = object_pose_in_camera_frame(2);
 
+    ros::Duration my_duration(0.03);
     try{
 
+        //listener.waitForTransform(parent_frame, child_frame, ros::Time::now(), my_duration);
         listener.transformPoint(parent_frame, camera_point, base_point);
 
         ROS_INFO("camera_depth_optical_frame: (%.2f, %.2f. %.2f) -----> base_link: (%.2f, %.2f, %.2f) at time %.2f",
@@ -116,7 +118,7 @@ void convert_object_position_to_robot_base(Eigen::Vector3d& object_pose_in_camer
                  base_point.point.x, base_point.point.y, base_point.point.z, base_point.header.stamp.toSec());
     }
     catch(tf::TransformException& ex){
-        ROS_ERROR("Received an exception trying to transform a point from \"base_laser\" to \"base_link\": %s", ex.what());
+        ROS_ERROR("Received an exception trying to transform a point from \"camera_depth_optical_frame\" to \"world\": %s", ex.what());
     }
     object_pose_in_robot_frame << base_point.point.x,
             base_point.point.y,
@@ -130,11 +132,54 @@ void dispaly_image(std::string path, ros::Publisher& image_pub){
     image_pub.publish(msg);
 }
 
+void convert_whole_object_positions_vector(std::vector<Eigen::Vector4d>& object_positions_vector, std::vector<std::vector<double>>& output_of_conversion){
+    Eigen::Matrix4d Trans_M;
+
+
+
+    Trans_M <<   0.00979286,    0.663814,   -0.747834,  1.267,
+                0.999614,  -0.0259421, -0.00993756,  0.140,
+                 -0.0259971,   -0.747448,   -0.663811,  0.300,
+                       0.0,         0.0,         0.0,    1.0;
+
+    std::vector<Eigen::Vector4d>::iterator itr;
+    for(itr = object_positions_vector.begin(); itr != object_positions_vector.end(); ++itr){
+        Eigen::Vector4d opv = Trans_M * (*itr);
+        std::vector<double> inner_output;
+
+        inner_output.push_back(opv(0));
+        inner_output.push_back(opv(1));
+        inner_output.push_back(opv(2));
+        output_of_conversion.push_back(inner_output);
+    }
+}
+
+void write_data(std::vector<std::vector<double>>& left_eef_trajectory,
+                std::vector<std::vector<double>>& object_positions_vector, std::ofstream& the_file){
+    std::vector<std::vector<double>>::iterator outter_itr;
+    std::vector<std::vector<double>>::iterator outter_itr_object = object_positions_vector.begin();
+    for(outter_itr = left_eef_trajectory.begin();
+        outter_itr != left_eef_trajectory.end(); ++outter_itr){
+        std::vector<double>::iterator inner_itr;
+        for(inner_itr = (*outter_itr).begin(); inner_itr != (*outter_itr).end(); ++inner_itr) // eef pos and rotation
+            the_file << (*inner_itr) << ",";
+
+        for(inner_itr = (*outter_itr_object).begin(); inner_itr != (*outter_itr_object).end(); ++inner_itr) // obj position
+            the_file << (*inner_itr) << ",";
+
+        the_file << 0 << "," << 0 << "," << 0 << ","; // obj rotation
+
+        ++outter_itr_object;
+    }
+
+    the_file << "\n";
+}
+
 //record marker position (object position) if changed in the specified file
 void record_traj_and_object_position(Data_config& parameters,
-                                     std::ofstream& left_eef_trajectory_file,
-                                     std::ofstream& object_file,
-                                     ros::Publisher& image_pub){
+                                     std::vector<std::vector<double>>& left_eef_trajectory,
+                                     ros::Publisher& image_pub,
+                                     std::ofstream& the_file){
     /*std::string pPath;
     pPath = getenv ("PWD");
     std::string path_to_file;
@@ -151,11 +196,13 @@ void record_traj_and_object_position(Data_config& parameters,
     std::string working_image_path = "/home/ghanim/git/catkin_ws/src/baxter_examples/share/images/working.jpg";
     std::string not_working_image_path = "/home/ghanim/git/catkin_ws/src/baxter_examples/share/images/finished.jpg";
 
-    if(object_file.is_open() && left_eef_trajectory_file.is_open()){
-        ros::Rate rate(50.0);
+        ros::Rate rate(parameters.get_the_rate());
         rate.sleep();
+        double time_now = 0.0;
+        std::vector<Eigen::Vector4d> object_position_vector;
         while(ros::ok()){
-        //ROS_INFO("go go go");
+
+            //ROS_INFO("go go go");
             //dispaly_image(not_working_image_path, image_pub);
             if(parameters.get_pressed() && parameters.get_lower_botton_pressed()){
                 if(parameters.get_release()){
@@ -173,26 +220,49 @@ void record_traj_and_object_position(Data_config& parameters,
                 Eigen::VectorXd current_values(6);
                 current_values = parameters.get_left_eef_pose_rpy();
                 if ((current_values - old_values).norm() > parameters.get_epsilon()){
-                    srand((unsigned)time(NULL));
+                    time_now = ros::Time::now().toSec();
+                    //srand((unsigned)time(NULL));
                     //ROS_ERROR("I am recording ...........");
                     //dispaly_image(working_image_path, image_pub);
-                    left_eef_trajectory_file << current_values(0) << ","
-                                             << current_values(1) << ","
+
+                    std::vector<double> inner_left_traj;
+                    inner_left_traj.push_back(current_values(0));
+                    inner_left_traj.push_back(current_values(1));
+                    inner_left_traj.push_back(current_values(2));
+                    inner_left_traj.push_back(current_values(3));
+                    inner_left_traj.push_back(current_values(4));
+                    inner_left_traj.push_back(current_values(5));
+                    left_eef_trajectory.push_back(inner_left_traj);
+
+                   /* << current_values(1) << ","
                                              << current_values(2) << ","
                                              << current_values(3) << ","
                                              << current_values(4) << ","
-                                             << current_values(5) << ",";
+                                             << current_values(5) << ",";*/
                     old_values = current_values;
                     //while saving end effector changes register object position concurrently
-                    Eigen::Vector3d object_position_in_robot_frame;
+                    Eigen::Vector4d object_position_in_robot_frame;
+                    object_position_in_robot_frame << parameters.get_object_position(), 1;
+                    object_position_vector.push_back(object_position_in_robot_frame);
+
                     /*Eigen::Vector3d test_object_pose;
                     test_object_pose << ((double)rand()/(double)RAND_MAX),
                             ((double)rand()/(double)RAND_MAX),
                             ((double)rand()/(double)RAND_MAX);*/
-                    convert_object_position_to_robot_base(parameters.get_object_position(), object_position_in_robot_frame);
-                    object_file << object_position_in_robot_frame(0) << ","
-                                << object_position_in_robot_frame(1) << ","
-                                << object_position_in_robot_frame(2) << ",";
+                    //convert_object_position_to_robot_base(parameters.get_object_position(), object_position_in_robot_frame);
+
+                    /*
+                    left_eef_trajectory_and_object_vector.push_back(parameters.get_object_position()(0));
+                    left_eef_trajectory_and_object_vector.push_back(parameters.get_object_position()(1));
+                    left_eef_trajectory_and_object_vector.push_back(parameters.get_object_position()(2));
+
+                    left_eef_trajectory_file << object_position_in_robot_frame(0) << ","
+                                             << object_position_in_robot_frame(1) << ","
+                                             << object_position_in_robot_frame(2) << ","
+                                             << 0.0 << ","
+                                             << 0.0 << ","
+                                             << 0.0 << ",";*/
+                    ROS_ERROR_STREAM("this iteration duration is: " << ros::Time::now().toSec() - time_now);
                 }
 
             }
@@ -201,15 +271,22 @@ void record_traj_and_object_position(Data_config& parameters,
                     ROS_ERROR("I need two buttons to be pressed simultaneously ...........");
                     parameters.set_release(true);
                     parameters.set_lower_button_pressed(false);
+
                 }
             }
             if(parameters.get_toggle() && !parameters.get_lower_botton_pressed()){
-                left_eef_trajectory_file << "\n";
-                object_file << "\n";
+                //left_eef_trajectory_file << "\n";
+                //object_file << "\n";
                 parameters.set_toggle(false);
+                std::vector<std::vector<double>> output_of_conversion;
+                convert_whole_object_positions_vector(object_position_vector, output_of_conversion);
+                write_data(left_eef_trajectory, output_of_conversion, the_file);
+                left_eef_trajectory.clear();
+                object_position_vector.clear();
             }
             rate.sleep();
+
         }
-    }
+
 
 }

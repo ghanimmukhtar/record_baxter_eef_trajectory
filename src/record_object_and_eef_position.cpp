@@ -52,8 +52,7 @@ int main(int argc, char **argv)
   ros::NodeHandle n;
 
   image_transport::ImageTransport it_(n);
-  //nh.getParam("camera_param_path", parameters.get_camera_param_path());
-  parameters.get_camera_char().readFromXMLFile("/home/mukhtar/git/record_baxter_eef_trajectory/data/camera_param_baxter.xml");
+  parameters.get_camera_char().readFromXMLFile("/home/maestre/baxter_ws/src/record_baxter_eef_trajectory/data/camera_param_baxter.xml");
 
   //subscribers
   image_transport::Subscriber in_image = it_.subscribe("/camera/rgb/image_rect_color", 1, imageCb);
@@ -70,12 +69,16 @@ int main(int argc, char **argv)
   ros::AsyncSpinner my_spinner(4);
   my_spinner.start();
   usleep(1e6);
+  double the_rate;
+  n.getParam("the_rate", the_rate);
+  parameters.set_the_rate(the_rate);
 
   std::ofstream object_file("object_positions.csv");
-  std::ofstream left_eef_trajectory_file("eef_trajectory_recorder.csv");
+  std::ofstream left_eef_trajectory_file("eef_trajectory_recorder.csv", std::ofstream::out | std::ofstream::app);
 
+  std::vector<std::vector<double>> left_eef_trajectory;
 
-  record_traj_and_object_position(parameters, left_eef_trajectory_file, object_file, image_publisher);
+  record_traj_and_object_position(parameters, left_eef_trajectory, image_publisher, left_eef_trajectory_file);
 
   left_eef_trajectory_file.close();
   object_file.close();
