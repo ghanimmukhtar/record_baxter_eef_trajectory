@@ -34,7 +34,7 @@ Translation: [0.760, 0.799, 0.907]
 
 static transformation:
 
-rosrun tf static_transform_publisher 0.760, 0.799, 0.907 0.336, 0.351, -0.588, 0.647 /world /camera_link 10
+rosrun tf static_transform_publisher 1.267 0.14 0.3 -0.355 0.014 0.935 -0.000 /world /camera_link 100
 
 there is an offset in the translation, you can modify (by hand) this values until you get the desired accuracy:
 
@@ -77,7 +77,12 @@ to see an example see Omar's baxter_basic_action node, scripts: baxter_basic_act
             in RPY (radian) [-2.297, 0.026, 1.561]
             in RPY (degree) [-131.589, 1.500, 89.431]
 
-
+/// our calibration stuff for camera infront of the table with regard to /camera_depth_optical_frame
+1.267 0.160 0.299 0.652 0.638 -0.297 -0.283
+- Translation: [1.267, 0.160, 0.299]
+- Rotation: in Quaternion [0.652, 0.638, -0.297, -0.283]
+            in RPY (radian) [-2.297, 0.026, 1.561]
+            in RPY (degree) [-131.589, 1.500, 89.431]
 
 
 

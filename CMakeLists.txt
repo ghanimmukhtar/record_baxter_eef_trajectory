@@ -35,6 +35,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -fPIC")
 add_service_files(
   FILES
   Recordtraj.srv
+  Getrealmodelstate.srv
 )
 
 generate_messages(
@@ -70,3 +71,9 @@ target_link_libraries(record_left_eef_trajectory_service /usr/local/lib/libaruco
 ${catkin_LIBRARIES} ${Boost_LIBRARIES}
 rgbd_utils image_processing )
 add_dependencies(record_left_eef_trajectory_service ${catkin_EXPORTED_TARGETS})
+
+add_executable(get_real_model_state_service src/services/get_real_model_state_service.cpp ${all_sources} src/parameters.hpp)
+target_link_libraries(get_real_model_state_service /usr/local/lib/libaruco.so aruco ${OpenCV_LIBRARIES} ${PCL_LIBRARIES}
+${catkin_LIBRARIES} ${Boost_LIBRARIES}
+rgbd_utils image_processing )
+add_dependencies(get_real_model_state_service ${catkin_EXPORTED_TARGETS})

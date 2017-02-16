@@ -53,6 +53,7 @@ void locate_object(const sensor_msgs::ImageConstPtr& depth_msg, Data_config& par
 
         pcl::fromROSMsg(ptcl_msg, *input_cloud);
         image_processing::PointT pt = input_cloud->at((int) parameters.get_marker_center()(0) + (int) parameters.get_marker_center()(1)*input_cloud->width);
+        //image_processing::PointT pt = input_cloud->at((int) parameters.get_marker_center()(0) + (int) parameters.get_marker_center()(1));
         Eigen::Vector3d object_position(pt.x, pt.y, pt.z);
         parameters.set_object_position(object_position);
     }
@@ -68,9 +69,9 @@ void locate_left_eef_pose(baxter_core_msgs::EndpointState& l_eef_feedback, Data_
     double roll, yaw, pitch;
     tf::Matrix3x3 m(parameters.get_left_eef_rpy_orientation());
     m.getRPY(roll, pitch, yaw);
-    left_end_effector_pose << parameters.get_left_eef_pose_quat().position.x,
-            parameters.get_left_eef_pose_quat().position.y,
-            parameters.get_left_eef_pose_quat().position.z,
+    left_end_effector_pose << l_eef_feedback.pose.position.x,
+            l_eef_feedback.pose.position.y,
+            l_eef_feedback.pose.position.z,
             roll,
             pitch,
             yaw;
@@ -136,11 +137,10 @@ void convert_whole_object_positions_vector(std::vector<Eigen::Vector4d>& object_
     Eigen::Matrix4d Trans_M;
 
 
-
     Trans_M <<   0.00979286,    0.663814,   -0.747834,  1.267,
-                0.999614,  -0.0259421, -0.00993756,  0.140,
-                 -0.0259971,   -0.747448,   -0.663811,  0.300,
-                       0.0,         0.0,         0.0,    1.0;
+            0.999614,  -0.0259421, -0.00993756,  0.160,
+            -0.0259971,   -0.747448,   -0.663811,  0.299,
+            0.0,         0.0,         0.0,    1.0;
 
     std::vector<Eigen::Vector4d>::iterator itr;
     for(itr = object_positions_vector.begin(); itr != object_positions_vector.end(); ++itr){
@@ -196,62 +196,62 @@ void record_traj_and_object_position(Data_config& parameters,
     std::string working_image_path = "/home/ghanim/git/catkin_ws/src/baxter_examples/share/images/working.jpg";
     std::string not_working_image_path = "/home/ghanim/git/catkin_ws/src/baxter_examples/share/images/finished.jpg";
 
-        ros::Rate rate(parameters.get_the_rate());
-        rate.sleep();
-        double time_now = 0.0;
-        std::vector<Eigen::Vector4d> object_position_vector;
-        while(ros::ok()){
+    ros::Rate rate(parameters.get_the_rate());
+    rate.sleep();
+    double time_now = 0.0;
+    std::vector<Eigen::Vector4d> object_position_vector;
+    while(ros::ok()){
 
-            //ROS_INFO("go go go");
-            //dispaly_image(not_working_image_path, image_pub);
-            if(parameters.get_pressed() && parameters.get_lower_botton_pressed()){
-                if(parameters.get_release()){
-                    parameters.set_release(false);
-                    parameters.set_toggle(true);
-                }
-                //wait till there is no (NaN values)
-                while(parameters.get_object_position()(0) != parameters.get_object_position()(0) ||
-                      parameters.get_object_position()(1) != parameters.get_object_position()(1) ||
-                      parameters.get_object_position()(2) != parameters.get_object_position()(2)){
-                    ROS_ERROR("I am in waiting limbo ...........");
-                }
+        //ROS_INFO("go go go");
+        //dispaly_image(not_working_image_path, image_pub);
+        if(parameters.get_pressed() && parameters.get_lower_botton_pressed()){
+            if(parameters.get_release()){
+                parameters.set_release(false);
+                parameters.set_toggle(true);
+            }
+            //wait till there is no (NaN values)
+            while(parameters.get_object_position()(0) != parameters.get_object_position()(0) ||
+                  parameters.get_object_position()(1) != parameters.get_object_position()(1) ||
+                  parameters.get_object_position()(2) != parameters.get_object_position()(2)){
+                ROS_ERROR("I am in waiting limbo ...........");
+            }
 
-                //get current eef pose
-                Eigen::VectorXd current_values(6);
-                current_values = parameters.get_left_eef_pose_rpy();
-                if ((current_values - old_values).norm() > parameters.get_epsilon()){
-                    time_now = ros::Time::now().toSec();
-                    //srand((unsigned)time(NULL));
-                    //ROS_ERROR("I am recording ...........");
-                    //dispaly_image(working_image_path, image_pub);
+            //get current eef pose
+            Eigen::VectorXd current_values(6);
+            current_values = parameters.get_left_eef_pose_rpy();
+            if ((current_values - old_values).norm() > parameters.get_epsilon()){
+                time_now = ros::Time::now().toSec();
+                //srand((unsigned)time(NULL));
+                //ROS_ERROR("I am recording ...........");
+                //dispaly_image(working_image_path, image_pub);
 
-                    std::vector<double> inner_left_traj;
-                    inner_left_traj.push_back(current_values(0));
-                    inner_left_traj.push_back(current_values(1));
-                    inner_left_traj.push_back(current_values(2));
-                    inner_left_traj.push_back(current_values(3));
-                    inner_left_traj.push_back(current_values(4));
-                    inner_left_traj.push_back(current_values(5));
-                    left_eef_trajectory.push_back(inner_left_traj);
+                std::vector<double> inner_left_traj;
+                inner_left_traj.push_back(current_values(0));
+                inner_left_traj.push_back(current_values(1));
+                inner_left_traj.push_back(current_values(2));
+                inner_left_traj.push_back(current_values(3));
+                inner_left_traj.push_back(current_values(4));
+                inner_left_traj.push_back(current_values(5));
+                left_eef_trajectory.push_back(inner_left_traj);
 
-                   /* << current_values(1) << ","
+                /* << current_values(1) << ","
                                              << current_values(2) << ","
                                              << current_values(3) << ","
                                              << current_values(4) << ","
                                              << current_values(5) << ",";*/
-                    old_values = current_values;
-                    //while saving end effector changes register object position concurrently
-                    Eigen::Vector4d object_position_in_robot_frame;
-                    object_position_in_robot_frame << parameters.get_object_position(), 1;
-                    object_position_vector.push_back(object_position_in_robot_frame);
+                old_values = current_values;
+                //while saving end effector changes register object position concurrently
+                Eigen::Vector4d object_position_in_robot_frame;
+                object_position_in_robot_frame << parameters.get_object_position(), 1;
+                object_position_vector.push_back(object_position_in_robot_frame);
 
-                    /*Eigen::Vector3d test_object_pose;
+                /*Eigen::Vector3d test_object_pose;
                     test_object_pose << ((double)rand()/(double)RAND_MAX),
                             ((double)rand()/(double)RAND_MAX),
                             ((double)rand()/(double)RAND_MAX);*/
-                    //convert_object_position_to_robot_base(parameters.get_object_position(), object_position_in_robot_frame);
+                //convert_object_position_to_robot_base(parameters.get_object_position(), object_position_in_robot_frame);
 
-                    /*
+                /*
                     left_eef_trajectory_and_object_vector.push_back(parameters.get_object_position()(0));
                     left_eef_trajectory_and_object_vector.push_back(parameters.get_object_position()(1));
                     left_eef_trajectory_and_object_vector.push_back(parameters.get_object_position()(2));
@@ -262,31 +262,31 @@ void record_traj_and_object_position(Data_config& parameters,
                                              << 0.0 << ","
                                              << 0.0 << ","
                                              << 0.0 << ",";*/
-                    ROS_ERROR_STREAM("this iteration duration is: " << ros::Time::now().toSec() - time_now);
-                }
-
+                ROS_ERROR_STREAM("this iteration duration is: " << ros::Time::now().toSec() - time_now);
             }
-            else{
-                if(parameters.get_toggle()){
-                    ROS_ERROR("I need two buttons to be pressed simultaneously ...........");
-                    parameters.set_release(true);
-                    parameters.set_lower_button_pressed(false);
-
-                }
-            }
-            if(parameters.get_toggle() && !parameters.get_lower_botton_pressed()){
-                //left_eef_trajectory_file << "\n";
-                //object_file << "\n";
-                parameters.set_toggle(false);
-                std::vector<std::vector<double>> output_of_conversion;
-                convert_whole_object_positions_vector(object_position_vector, output_of_conversion);
-                write_data(left_eef_trajectory, output_of_conversion, the_file);
-                left_eef_trajectory.clear();
-                object_position_vector.clear();
-            }
-            rate.sleep();
 
         }
+        else{
+            if(parameters.get_toggle()){
+                ROS_ERROR("I need two buttons to be pressed simultaneously ...........");
+                parameters.set_release(true);
+                parameters.set_lower_button_pressed(false);
+
+            }
+        }
+        if(parameters.get_toggle() && !parameters.get_lower_botton_pressed()){
+            //left_eef_trajectory_file << "\n";
+            //object_file << "\n";
+            parameters.set_toggle(false);
+            std::vector<std::vector<double>> output_of_conversion;
+            convert_whole_object_positions_vector(object_position_vector, output_of_conversion);
+            write_data(left_eef_trajectory, output_of_conversion, the_file);
+            left_eef_trajectory.clear();
+            object_position_vector.clear();
+        }
+        rate.sleep();
+
+    }
 
 
 }
