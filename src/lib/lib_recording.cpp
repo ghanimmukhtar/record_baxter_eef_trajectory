@@ -56,6 +56,7 @@ void locate_object(const sensor_msgs::ImageConstPtr& depth_msg, Data_config& par
         //image_processing::PointT pt = input_cloud->at((int) parameters.get_marker_center()(0) + (int) parameters.get_marker_center()(1));
         Eigen::Vector3d object_position(pt.x, pt.y, pt.z);
         parameters.set_object_position(object_position);
+//        ROS_ERROR_STREAM("obj pos: " << parameters.get_object_position());
     }
 }
 

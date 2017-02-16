@@ -71,6 +71,7 @@ bool get_real_model_state_service_callback(record_baxter_eef_trajectory::Getreal
     usleep(4e6);
 
     Eigen::Vector3d obj_pos = parameters.get_object_position();
+//    ROS_ERROR_STREAM("previous conversion obj_pos" << obj_pos);
     Eigen::Vector4d extended_vector;
     extended_vector << obj_pos[0],
                        obj_pos[1],
@@ -81,6 +82,8 @@ bool get_real_model_state_service_callback(record_baxter_eef_trajectory::Getreal
     std::vector<std::vector<double>> output_of_conversion;
     convert_whole_object_positions_vector(vector, output_of_conversion);
     std::vector<double> obj_pos_converted = output_of_conversion[0];
+
+//    ROS_ERROR_STREAM("Converted obj_pos" << obj_pos_converted);
 
     res.model_state = {obj_pos_converted[0],
                        obj_pos_converted[1],

@@ -1,7 +1,0 @@
-<launch>
-
-  <param name="camera_param_path" value="/home/maestre/baxter_ws/src/record_baxter_eef_trajectory/data/camera_param_baxter.xml"/>
-
-  <node name="get_real_model_state_service" pkg="record_baxter_eef_trajectory" type="get_real_model_state_service" output="screen">
-  </node>
-</launch>

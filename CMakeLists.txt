@@ -36,6 +36,7 @@ add_service_files(
   FILES
   Recordtraj.srv
   Getrealmodelstate.srv
+  Getrealeefpose.srv
 )
 
 generate_messages(
@@ -77,3 +78,9 @@ target_link_libraries(get_real_model_state_service /usr/local/lib/libaruco.so ar
 ${catkin_LIBRARIES} ${Boost_LIBRARIES}
 rgbd_utils image_processing )
 add_dependencies(get_real_model_state_service ${catkin_EXPORTED_TARGETS})
+
+add_executable(get_real_eef_pose_service src/services/get_real_eef_pose_service.cpp ${all_sources} src/parameters.hpp)
+target_link_libraries(get_real_eef_pose_service /usr/local/lib/libaruco.so aruco ${OpenCV_LIBRARIES} ${PCL_LIBRARIES}
+${catkin_LIBRARIES} ${Boost_LIBRARIES}
+rgbd_utils image_processing )
+add_dependencies(get_real_eef_pose_service ${catkin_EXPORTED_TARGETS})
