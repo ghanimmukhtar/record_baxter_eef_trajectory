@@ -42,6 +42,7 @@ bool get_real_eef_pose_service_callback(record_baxter_eef_trajectory::Getrealeef
         res.pose = {};
     }
 
+    ROS_INFO("Done.");
     return true;
 }
 
@@ -53,7 +54,7 @@ int main(int argc, char **argv)
   image_transport::ImageTransport it_(n);
   //int test;
   ros::ServiceServer service = n.advertiseService<record_baxter_eef_trajectory::Getrealeefpose::Request,
-        record_baxter_eef_trajectory::Getrealeefpose::Response>("a2l/get_eef_pose",
+        record_baxter_eef_trajectory::Getrealeefpose::Response>("a2l/get_real_eef_pose",
                                                                     boost::bind(get_real_eef_pose_service_callback, _1, _2, n, it_));
   ROS_INFO("Ready to get real eef pose.");
   ros::spin();

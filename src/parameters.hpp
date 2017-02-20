@@ -22,16 +22,22 @@
 struct Parameters {
     ///////// OBJECT tracking variables
     // object position (x, y, z) in real world in robot base frame
+    size_t number_of_markers = 2;
     cv_bridge::CvImagePtr cv_ptr;
-    Eigen::Vector3d object_position;
+    std::vector<Eigen::Vector3d> object_position_vector;
+
+
     cv::Mat pic;
     sensor_msgs::ImageConstPtr rgb_msg, depth_msg;
     sensor_msgs::CameraInfoConstPtr info_msg;
-    Eigen::Vector2i marker_center;
+    std::vector<Eigen::Vector2i> marker_center_vector;
+
 
     aruco::MarkerDetector aruco_detector;
     aruco::CameraParameters camera_char;
-    std::vector<aruco::Marker> markers;
+    std::vector<aruco::Marker> markers_vector;
+    std::vector<int> markers_id_vector;
+
     float marker_size = 0.04;
 
     std::string object_file_name = "";
@@ -56,13 +62,33 @@ class Data_config{
 public:
     Parameters params;
 
+    Data_config(){
+        //size setters
+        params.object_position_vector.resize(params.number_of_markers);
+        params.marker_center_vector.resize(params.number_of_markers);
+        params.markers_vector.resize(params.number_of_markers);
+        params.markers_id_vector.resize(params.number_of_markers);
+    }
+
+    void resize_vectors(int new_size){
+        params.markers_id_vector.resize(new_size);
+    }
+
     //// Getters
+    int get_number_of_markers(){
+        return params.number_of_markers;
+    }
+
     cv_bridge::CvImagePtr& get_cv_pridge(){
         return params.cv_ptr;
     }
 
-    Eigen::Vector3d& get_object_position(){
-        return params.object_position;
+    Eigen::Vector3d& get_object_position(int index){
+        return params.object_position_vector[index];
+    }
+
+    std::vector<Eigen::Vector3d>& get_object_position_vector(){
+        return params.object_position_vector;
     }
 
     cv::Mat& get_cv_image(){
@@ -81,8 +107,12 @@ public:
         return params.info_msg;
     }
 
-    Eigen::Vector2i& get_marker_center(){
-        return params.marker_center;
+    Eigen::Vector2i& get_marker_center(int index){
+        return params.marker_center_vector[index];
+    }
+
+    std::vector<Eigen::Vector2i>& get_marker_center_vector(){
+        return params.marker_center_vector;
     }
 
     aruco::MarkerDetector& get_aruco_detector(){
@@ -94,7 +124,11 @@ public:
     }
 
     std::vector<aruco::Marker>& get_markers(){
-        return params.markers;
+        return params.markers_vector;
+    }
+
+    std::vector<int>& get_markers_id_vector(){
+        return params.markers_id_vector;
     }
 
     float get_marker_size(){
@@ -150,12 +184,16 @@ public:
     }
 
     //// Setters
+    void set_number_of_marker(int number){
+        params.number_of_markers = number;
+    }
+
     void set_cv_pridged(cv_bridge::CvImagePtr& cv_ptr){
         params.cv_ptr = cv_ptr;
     }
 
-    void set_object_position(Eigen::Vector3d& object_position){
-        params.object_position = object_position;
+    void set_object_position(Eigen::Vector3d& object_position, int index){
+        params.object_position_vector[index] = object_position;
     }
 
     void set_cv_image(cv::Mat& cv_image){
@@ -180,16 +218,20 @@ public:
         params.marker_size = marker_size;
     }
 
-    void set_marker_center(Eigen::Vector2i& marker_center){
-        params.marker_center = marker_center;
+    void set_marker_center(Eigen::Vector2i& marker_center, int index){
+        params.marker_center_vector[index] = marker_center;
     }
 
     void set_camera_char(aruco::CameraParameters& camera_char){
         params.camera_char = camera_char;
     }
 
+    void set_markers_id_vector(int marker_id, int marker_index){
+        params.markers_id_vector[marker_index] = marker_id;
+    }
+
     void set_markers(std::vector<aruco::Marker>& markers){
-        params.markers = markers;
+        params.markers_vector = markers;
     }
 
     void set_object_file_name(std::string file_name){

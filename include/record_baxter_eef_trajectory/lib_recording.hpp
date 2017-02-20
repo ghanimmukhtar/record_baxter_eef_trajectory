@@ -20,6 +20,7 @@
  * */
 void config_pic(const sensor_msgs::ImageConstPtr& msg, Data_config& parameters);
 
+
 /*Configure the markers detector as required
  * input: Data_config class
  * return: nothing but set the corresponding variable in the Data_config class

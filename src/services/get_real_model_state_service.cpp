@@ -70,7 +70,7 @@ bool get_real_model_state_service_callback(record_baxter_eef_trajectory::Getreal
 
     usleep(4e6);
 
-    Eigen::Vector3d obj_pos = parameters.get_object_position();
+    Eigen::Vector3d obj_pos = parameters.get_object_position(req.object_index);
 //    ROS_ERROR_STREAM("previous conversion obj_pos" << obj_pos);
     Eigen::Vector4d extended_vector;
     extended_vector << obj_pos[0],
@@ -90,6 +90,7 @@ bool get_real_model_state_service_callback(record_baxter_eef_trajectory::Getreal
                        obj_pos_converted[2],
                        0, 0, 0};
 
+    ROS_INFO("Done.");
     return true;
 }
 
@@ -101,7 +102,7 @@ int main(int argc, char **argv)
   image_transport::ImageTransport it_(n);
   //int test;
   ros::ServiceServer service = n.advertiseService<record_baxter_eef_trajectory::Getrealmodelstate::Request,
-        record_baxter_eef_trajectory::Getrealmodelstate::Response>("a2l/get_model_state",
+        record_baxter_eef_trajectory::Getrealmodelstate::Response>("a2l/get_real_model_state",
                                                                     boost::bind(get_real_model_state_service_callback, _1, _2, n, it_));
   ROS_INFO("Ready to get real object state.");
   ros::spin();

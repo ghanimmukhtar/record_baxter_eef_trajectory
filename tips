@@ -64,11 +64,26 @@ The suggested one is the joint control mode.
 to see an example see Omar's baxter_basic_action node, scripts: baxter_basic_actions_ik_moveit, joint_position_basic_actions and remember to copy ik_solver.py because this one performs the IK, cartersian to joint space.
 
 
+
+/// carlos camera link
+1.11 0.131 0.3 -0.443 -0.067 0.891 -0.067
+- Rotation: in Quaternion [-0.448, -0.047, 0.891, -0.056]
+            in RPY (radian) [-0.056, 0.934, -3.044]
+            in RPY (degree) [-3.236, 53.529, -174.429]
+
+/// carlos camera rbg link
+1.099 0.203 0.414 0.611 0.726 -0.231 -0.214
+- Rotation: in Quaternion [0.611, 0.726, -0.231, -0.214]
+            in RPY (radian) [-2.500, -0.028, 1.732]
+            in RPY (degree) [-143.265, -1.619, 99.237]
+
+
 /// our calibration stuff for camera infront of the table with regard to /camera_link frame
-1.267 0.14 0.3 -0.355 0.014 0.935 -0.000
-- Rotation: in Quaternion [-0.355, 0.014, 0.935, -0.000]
-            in RPY (radian) [0.034, 0.726, -3.128]
-            in RPY (degree) [1.965, 41.588, -179.196]
+1.148 0.14 0.3 -0.423 -0.051 0.902 -0.067
+- Rotation: in Quaternion [-0.423, -0.051, 0.902, -0.067]
+            in RPY (radian) [-0.054, 0.879, -3.019]
+            in RPY (degree) [-3.094, 50.370, -172.951]
+
 
 /// our calibration stuff for camera infront of the table with regard to /camera_rgb_optical_frame
 1.267, 0.185, 0.299 0.652, 0.638, -0.297, -0.283

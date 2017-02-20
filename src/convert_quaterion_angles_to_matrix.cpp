@@ -6,7 +6,7 @@ int main(){
 //    my_angles.setX(-0.438);
 //    my_angles.setY(-0.031);
 //    my_angles.setZ(0.898);
-    my_angles.setRPY(-2.297, 0.026, 1.561);
+    my_angles.setRPY(-2.500, -0.028, 1.732);
 
     tf::Matrix3x3 rotation_matrix(my_angles);
     Eigen::Matrix3d output;

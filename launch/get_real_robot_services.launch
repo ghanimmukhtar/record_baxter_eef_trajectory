@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <launch>
 
   <param name="camera_param_path" value="/home/maestre/baxter_ws/src/record_baxter_eef_trajectory/data/camera_param_baxter.xml"/>
