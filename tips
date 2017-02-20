@@ -66,10 +66,10 @@ to see an example see Omar's baxter_basic_action node, scripts: baxter_basic_act
 
 
 /// carlos camera link
-1.11 0.131 0.3 -0.443 -0.067 0.891 -0.067
-- Rotation: in Quaternion [-0.448, -0.047, 0.891, -0.056]
-            in RPY (radian) [-0.056, 0.934, -3.044]
-            in RPY (degree) [-3.236, 53.529, -174.429]
+1.343 0.16 0.3 -0.390 -0.033 0.919 -0.041
+- Rotation: in Quaternion [-0.390, -0.033, 0.919, -0.041]
+            in RPY (radian) [-0.042, 0.804, -3.070]
+            in RPY (degree) [-2.403, 46.064, -175.888]
 
 /// carlos camera rbg link
 1.099 0.203 0.414 0.611 0.726 -0.231 -0.214

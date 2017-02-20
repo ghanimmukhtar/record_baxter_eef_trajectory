@@ -155,9 +155,10 @@ void convert_whole_object_positions_vector(std::vector<Eigen::Vector4d>& object_
     Eigen::Matrix4d Trans_M;
 
 
-    Trans_M <<   -0.160443,   0.788067,  -0.594313,  1.12,
-            0.986648,   0.145126, -0.0739203,  0.13,
-            0.0279963,  -0.598238,   -0.80083,  0.31,
+    Trans_M <<
+            -0.100989,   0.714561,  -0.692246,  1.338,
+            0.994465,  0.0927816, -0.0493054,  0.205,
+            0.0289959,  -0.693393,  -0.719976,  0.301,
             0.0, 0.0, 0.0, 1.0;
 
     std::vector<Eigen::Vector4d>::iterator itr;

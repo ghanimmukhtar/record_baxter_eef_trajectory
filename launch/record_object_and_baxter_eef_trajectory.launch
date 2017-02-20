@@ -8,6 +8,7 @@
     <arg name="my_file" default="/urdf/electric_gripper/short_end_effector.urdf.xacro"/>
     <node name="change_fingers" pkg="baxter_examples" type="send_urdf_fragment.py" args="-l $(arg my_link) -j $(arg my_joint) -f $(find rethink_ee_description)$(arg my_file)"/-->
 
-  <node name="record_eef_trajectory_and_object_position_service" pkg="record_baxter_eef_trajectory" type="record_object_and_eef_position" launch-prefix="gdb -ex run --args"  output="screen">
+  <!--node name="record_eef_trajectory_and_object_position_service" pkg="record_baxter_eef_trajectory" type="record_object_and_eef_position" launch-prefix="gdb -ex run args"  output="screen"-->
+  <node name="record_eef_trajectory_and_object_position_service" pkg="record_baxter_eef_trajectory" type="record_object_and_eef_position"  output="screen">
   </node>
 </launch>
