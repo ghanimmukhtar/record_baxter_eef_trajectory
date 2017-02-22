@@ -38,7 +38,7 @@ struct Parameters {
     std::vector<aruco::Marker> markers_vector;
     std::vector<int> markers_id_vector;
 
-    float marker_size = 0.04;
+    float marker_size = 0.05;
 
     std::string object_file_name = "";
 

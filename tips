@@ -13,32 +13,37 @@ roslaunch freenect_launch freenect.launch rgb_frame_id:=camera_rgb_optical_frame
 ((((((
 if camera not calibrated:
 
-launch calibration
+publish calibration based on QR code as reference point (both the external (camera_link) and arm camera (base_link) must watch the QR codes):
+
+source /home/chavez/catkin_ws/devel/setup.bash
 
 roslaunch baxter_kinect_calibration baxter_bundle_calibrate_xtion.launch
 
 view onlive results: 
 
-rosrun tf tf_echo /torso /camera_link
+rosrun tf tf_echo /base /camera_link
 
 once we have the matrix transformation from tf tf_echo, we copy the translation and rotation part and publish a static transformation:
 
 e.g.:
-
-matrix from tf_echo:
 
 Translation: [0.760, 0.799, 0.907]
 - Rotation: in Quaternion [0.336, 0.351, -0.588, 0.647]
             in RPY (radian) [0.043, 1.014, -1.450]
             in RPY (degree) [2.492, 58.080, -83.103]
 
-static transformation:
+Stop previous runs.
 
-rosrun tf static_transform_publisher 1.267 0.14 0.3 -0.355 0.014 0.935 -0.000 /world /camera_link 100
+Run static transformation:
 
-there is an offset in the translation, you can modify (by hand) this values until you get the desired accuracy:
+rosrun static_transform_publisher 1.134 0.14 0.46 -0.504 -0.091 0.853 -0.097 /base /camera_link 100
 
-*rosrun tf stic_transform_publisher 0.810, 0.809, 0.747 0.336, 0.351, -0.588, 0.647 /world /camera_link 10
+there is an offset in the translation, you can modify (by hand) this values until you get the desired accuracy
+
+now, we need the transformation with the camera_rgb_optical_frame for the internal CPP matrix (both the external and arm camera must watch the QR codes):
+
+rosrun tf tf_echo /base /camera_rbg_optical_frame
+
 
 )))))))))
 
@@ -65,17 +70,18 @@ to see an example see Omar's baxter_basic_action node, scripts: baxter_basic_act
 
 
 
-/// carlos camera link
-1.343 0.16 0.3 -0.390 -0.033 0.919 -0.041
-- Rotation: in Quaternion [-0.390, -0.033, 0.919, -0.041]
-            in RPY (radian) [-0.042, 0.804, -3.070]
-            in RPY (degree) [-2.403, 46.064, -175.888]
+/// carlos /camera_link frame
+1.134 0.14 0.46 -0.504 -0.091 0.853 -0.097
+- Rotation: in Quaternion [-0.504, -0.091, 0.853, -0.097]
+            in RPY (radian) [-0.119, 1.072, -2.987]
+            in RPY (degree) [-6.842, 61.441, -171.123]
 
-/// carlos camera rbg link
-1.099 0.203 0.414 0.611 0.726 -0.231 -0.214
-- Rotation: in Quaternion [0.611, 0.726, -0.231, -0.214]
-            in RPY (radian) [-2.500, -0.028, 1.732]
-            in RPY (degree) [-143.265, -1.619, 99.237]
+
+/// carlos /camera_rgb_optical_frame
+- Translation: [1.338, 0.205, 0.301]
+- Rotation: in Quaternion [0.618, 0.692, -0.269, -0.261]
+            in RPY (radian) [-2.375, -0.029, 1.672]
+            in RPY (degree) [-136.074, -1.644, 95.808]
 
 
 /// our calibration stuff for camera infront of the table with regard to /camera_link frame
