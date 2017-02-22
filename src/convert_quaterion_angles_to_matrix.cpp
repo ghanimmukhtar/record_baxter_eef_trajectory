@@ -1,24 +1,17 @@
 #include "record_baxter_eef_trajectory/lib_recording.hpp"
 
-int main(){
-    tf::Quaternion my_angles;
-//    my_angles.setW(-0.016);
-//    my_angles.setX(-0.438);
-//    my_angles.setY(-0.031);
-//    my_angles.setZ(0.898);
-    my_angles.setRPY(-2.375, -0.029, 1.672);
+int main(int argc, char **argv)
+{
+    ros::init(argc, argv, "convert_quaterion_angles_to_matrix");
+    ros::NodeHandle n;
 
-    tf::Matrix3x3 rotation_matrix(my_angles);
-    Eigen::Matrix3d output;
+    ros::AsyncSpinner my_spinner(1);
+    my_spinner.start();
 
-    for(int i = 0; i < 3; i++)
-        for(int j = 0; j < 3; j++){
-            ROS_INFO_STREAM("element in row: " << i << " column: " << j << " is: " << rotation_matrix[i][j]);
+    Data_config params;
+    n.getParam("camera_pose", params.get_camera_frame_pose());
+    n.getParam("camera_frame_choice", params.get_camera_frame_choice());
 
-        }
-    output << rotation_matrix[0][0], rotation_matrix[0][1], rotation_matrix[0][2],
-            rotation_matrix[1][0], rotation_matrix[1][1], rotation_matrix[1][2],
-            rotation_matrix[2][0], rotation_matrix[2][1], rotation_matrix[2][2];
-    ROS_INFO_STREAM("the whole matrix is: \n" << output);
+    set_camera_poses_and_transformation(params);
     return 0;
 }

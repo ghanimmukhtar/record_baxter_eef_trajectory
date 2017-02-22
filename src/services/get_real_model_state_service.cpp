@@ -37,6 +37,10 @@ bool get_real_model_state_service_callback(record_baxter_eef_trajectory::Getreal
 
     parameters.get_camera_char().readFromXMLFile("/home/mukhtar/git/automatic_camera_robot_cal/data/camera_param_baxter.xml");
 
+    //set params in launch file to construct the transformation matrix
+    nh.getParam("camera_pose", parameters.get_camera_frame_pose());
+    nh.getParam("camera_frame_choice", parameters.get_camera_frame_choice());
+
     //subscribers
     image_transport::Subscriber in_image = it_.subscribe("/camera/rgb/image_rect_color", 1, imageCb);
     ros::Subscriber in_info_image = nh.subscribe<sensor_msgs::CameraInfoConstPtr>("/camera/rgb/camera_info", 1, infoimageCb);
@@ -80,7 +84,7 @@ bool get_real_model_state_service_callback(record_baxter_eef_trajectory::Getreal
     std::vector<Eigen::Vector4d> vector;
     vector.push_back(extended_vector);
     std::vector<std::vector<double>> output_of_conversion;
-    convert_whole_object_positions_vector(vector, output_of_conversion);
+    convert_whole_object_positions_vector(parameters, vector, output_of_conversion);
     std::vector<double> obj_pos_converted = output_of_conversion[0];
 
 //    ROS_ERROR_STREAM("Converted obj_pos" << obj_pos_converted);

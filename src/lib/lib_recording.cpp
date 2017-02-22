@@ -54,27 +54,27 @@ void show_marker(Data_config& parameters){
 
 //locate object position
 void locate_object(const sensor_msgs::ImageConstPtr& depth_msg, Data_config& parameters){
-        if(!parameters.get_cv_image().empty() && !parameters.get_markers().empty()){
-            rgbd_utils::RGBD_to_Pointcloud converter(depth_msg, parameters.get_rgb_msg(), parameters.get_info_msg());
-            sensor_msgs::PointCloud2 ptcl_msg = converter.get_pointcloud();
-            image_processing::PointCloudT::Ptr input_cloud(new image_processing::PointCloudT);
-            pcl::fromROSMsg(ptcl_msg, *input_cloud);
-            ROS_ERROR_STREAM("the markers vector size is: " << parameters.get_markers().size());
-            int i;
-            for(int j = 0; j < parameters.get_number_of_markers(); j++){
-                if(parameters.get_markers()[j].id == 3)
-                    i = 0;
-                else if(parameters.get_markers()[j].id == 341)
-                    i = 1;
-                image_processing::PointT pt = input_cloud->at((int) parameters.get_marker_center(i)(0) + (int) parameters.get_marker_center(i)(1)*input_cloud->width);
-                Eigen::Vector3d object_position(pt.x, pt.y, pt.z);
-                if(object_position[0] == object_position[0] && object_position[1] == object_position[1] && object_position[2] == object_position[2])
-                    parameters.set_object_position(object_position, i);
-            }
-            for(size_t s = 0; s < parameters.get_object_position_vector().size(); s++)
-                ROS_ERROR_STREAM("locate_object " << s << " : " << parameters.get_object_position_vector()[s]);
-            ROS_ERROR_STREAM(" ");
+    if(!parameters.get_cv_image().empty() && !parameters.get_markers().empty()){
+        rgbd_utils::RGBD_to_Pointcloud converter(depth_msg, parameters.get_rgb_msg(), parameters.get_info_msg());
+        sensor_msgs::PointCloud2 ptcl_msg = converter.get_pointcloud();
+        image_processing::PointCloudT::Ptr input_cloud(new image_processing::PointCloudT);
+        pcl::fromROSMsg(ptcl_msg, *input_cloud);
+        ROS_ERROR_STREAM("the markers vector size is: " << parameters.get_markers().size());
+        int i;
+        for(int j = 0; j < parameters.get_number_of_markers(); j++){
+            if(parameters.get_markers()[j].id == 3)
+                i = 0;
+            else if(parameters.get_markers()[j].id == 341)
+                i = 1;
+            image_processing::PointT pt = input_cloud->at((int) parameters.get_marker_center(i)(0) + (int) parameters.get_marker_center(i)(1)*input_cloud->width);
+            Eigen::Vector3d object_position(pt.x, pt.y, pt.z);
+            if(object_position[0] == object_position[0] && object_position[1] == object_position[1] && object_position[2] == object_position[2])
+                parameters.set_object_position(object_position, i);
         }
+        for(size_t s = 0; s < parameters.get_object_position_vector().size(); s++)
+            ROS_ERROR_STREAM("locate_object " << s << " : " << parameters.get_object_position_vector()[s]);
+        ROS_ERROR_STREAM(" ");
+    }
 }
 
 //get baxter left eef pose
@@ -151,19 +151,50 @@ void dispaly_image(std::string path, ros::Publisher& image_pub){
     image_pub.publish(msg);
 }
 
-void convert_whole_object_positions_vector(std::vector<Eigen::Vector4d>& object_positions_vector, std::vector<std::vector<double>>& output_of_conversion){
-    Eigen::Matrix4d Trans_M;
+void set_camera_poses_and_transformation(Data_config& parameters){
+    tf::Quaternion my_angles;
+    //from roslaunch file given pose construct a vector with x, y, z, roll, pitch and yaw
+    std::vector<double> camera_pose;
+    ROS_ERROR_STREAM("angles are: " << parameters.get_camera_frame_pose() );
+    std::stringstream ss (parameters.get_camera_frame_pose());
+    string field;
+    while (getline( ss, field, ' ' ))
+    {
+        // for each field we wish to convert it to a double
+        // (since we require that the CSV contains nothing but floating-point values)
+        stringstream fs( field );
+        double f = 0.0;  // (default value is 0.0)
+        fs >> f;
 
+        // add the newly-converted field to the end of the record
+        camera_pose.push_back( f );
+    }
 
-    Trans_M <<
-            -0.100989,   0.714561,  -0.692246,  1.338,
-            0.994465,  0.0927816, -0.0493054,  0.205,
-            0.0289959,  -0.693393,  -0.719976,  0.301,
-            0.0, 0.0, 0.0, 1.0;
+    if(strcmp(parameters.get_camera_frame_choice().c_str(), "rgb"))
+        parameters.set_camera_rgb_optical_pose(camera_pose);
+    else if(strcmp(parameters.get_camera_frame_choice().c_str(), "depth"))
+            parameters.set_camera_depth_optical_pose(camera_pose);
+    else
+        ROS_WARN("please specify in the your launch file a parameter with the name (camera_frame) with a value equal to: 'rgb' or 'depth'");
 
+    my_angles.setRPY(camera_pose[3], camera_pose[4], camera_pose[5]);
+    tf::Matrix3x3 rotation_matrix(my_angles);
+    Eigen::Matrix4d trans_m;
+    trans_m << rotation_matrix[0][0], rotation_matrix[0][1], rotation_matrix[0][2], camera_pose[0],
+            rotation_matrix[1][0], rotation_matrix[1][1], rotation_matrix[1][2], camera_pose[1],
+            rotation_matrix[2][0], rotation_matrix[2][1], rotation_matrix[2][2], camera_pose[2],
+                                0,                     0,                     0,              1;
+    parameters.set_transformation_matrix(trans_m);
+    ROS_INFO_STREAM("and the transformation matrix from params is: \n" << parameters.get_transformation_matrix());
+}
+
+void convert_whole_object_positions_vector(Data_config& parameters,
+                                           std::vector<Eigen::Vector4d>& object_positions_vector,
+                                           std::vector<std::vector<double>>& output_of_conversion){
+    set_camera_poses_and_transformation(parameters);
     std::vector<Eigen::Vector4d>::iterator itr;
     for(itr = object_positions_vector.begin(); itr != object_positions_vector.end(); itr++){
-        Eigen::Vector4d opv = Trans_M * (*itr);
+        Eigen::Vector4d opv = parameters.get_transformation_matrix() * (*itr);
         std::vector<double> inner_output;
         inner_output.push_back(opv(0));
         inner_output.push_back(opv(1));
@@ -302,7 +333,7 @@ void record_traj_and_object_position(Data_config& parameters,
             //object_file << "\n";
             parameters.set_toggle(false);
             std::vector<std::vector<double>> output_of_conversion;
-            convert_whole_object_positions_vector(object_position_vector, output_of_conversion);
+            convert_whole_object_positions_vector(parameters, object_position_vector, output_of_conversion);
             write_data(parameters, left_eef_trajectory, output_of_conversion, the_file);
             left_eef_trajectory.clear();
             object_position_vector.clear();

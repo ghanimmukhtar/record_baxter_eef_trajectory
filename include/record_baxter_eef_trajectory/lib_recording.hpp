@@ -20,6 +20,7 @@
  * */
 void config_pic(const sensor_msgs::ImageConstPtr& msg, Data_config& parameters);
 
+void set_camera_poses_and_transformation(Data_config& parameters);
 
 /*Configure the markers detector as required
  * input: Data_config class
@@ -57,7 +58,9 @@ void convert_object_position_to_robot_base(Eigen::Vector3d& object_pose_in_camer
  * */
 void dispaly_image(std::string path, ros::Publisher &image_pub);
 
-void convert_whole_object_positions_vector(std::vector<Eigen::Vector4d>& object_positions_vector, std::vector<std::vector<double> > &output_of_conversion);
+void convert_whole_object_positions_vector(Data_config &parameters,
+                                           std::vector<Eigen::Vector4d>& object_positions_vector,
+                                           std::vector<std::vector<double> > &output_of_conversion);
 void write_data(std::vector<std::vector<double>>& left_eef_trajectory_and_object_vector,
                 std::vector<std::vector<double>>& object_positions_vector, std::ofstream& the_file);
 

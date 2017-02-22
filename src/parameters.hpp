@@ -55,6 +55,10 @@ struct Parameters {
     double epsilon = 0.01;
     std::string camera_param_path;
     double the_rate = 50.0;
+    std::vector<double> camera_rgb_optical_pose, camera_depth_optical_pose, camera_link_pose;
+    Eigen::Matrix4d Trans_M;
+    std::string camera_fram_pose;
+    std::string camera_frame_choice;
 };
 
 class Data_config{
@@ -183,6 +187,30 @@ public:
         return params.camera_param_path;
     }
 
+    std::vector<double>& get_camera_depth_optical_pose(){
+        return params.camera_depth_optical_pose;
+    }
+
+    std::vector<double>& get_camera_rgb_optical_pose(){
+        return params.camera_rgb_optical_pose;
+    }
+
+    std::vector<double>& get_camera_link_pose(){
+        return params.camera_link_pose;
+    }
+
+    Eigen::Matrix4d& get_transformation_matrix(){
+        return params.Trans_M ;
+    }
+
+    std::string& get_camera_frame_pose(){
+        return params.camera_fram_pose;
+    }
+
+    std::string& get_camera_frame_choice(){
+        return params.camera_frame_choice;
+    }
+
     //// Setters
     void set_number_of_marker(int number){
         params.number_of_markers = number;
@@ -281,6 +309,30 @@ public:
 
     void set_the_rate(double& the_rate){
         params.the_rate = the_rate;
+    }
+
+    void set_camera_depth_optical_pose(std::vector<double>& pose){
+        params.camera_depth_optical_pose = pose;
+    }
+
+    void set_camera_rgb_optical_pose(std::vector<double>& pose){
+        params.camera_rgb_optical_pose = pose;
+    }
+
+    void set_camera_link_pose(std::vector<double>& pose){
+        params.camera_link_pose = pose;
+    }
+
+    void set_transformation_matrix(Eigen::Matrix4d& Trans_M){
+        params.Trans_M = Trans_M;
+    }
+
+    void set_camera_frame_pose(std::string pose){
+        params.camera_fram_pose = pose;
+    }
+
+    void set_camera_frame_choice(std::string frame_choice){
+        params.camera_frame_choice = frame_choice;
     }
 };
 
