@@ -20,6 +20,8 @@
  * */
 void config_pic(const sensor_msgs::ImageConstPtr& msg, Data_config& parameters);
 
+void get_angles_from_rotation_matrix(tf::Matrix3x3& rotation_matrix, std::vector<double>& returned_angles, std::string my_type = "quaternion");
+
 void set_camera_poses_and_transformation(Data_config& parameters);
 
 /*Configure the markers detector as required

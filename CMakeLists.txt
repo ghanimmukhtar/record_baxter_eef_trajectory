@@ -61,7 +61,7 @@ add_executable(record_baxter_eef_trajectory src/record_baxter_eef_trajectory.cpp
 target_link_libraries(record_baxter_eef_trajectory ${catkin_LIBRARIES}  )
 
 add_executable(convert_quaterion_angles_to_matrix src/convert_quaterion_angles_to_matrix.cpp ${all_sources} src/parameters.hpp)
-target_link_libraries(convert_quaterion_angles_to_matrix /usr/local/lib/libaruco.so ${catkin_LIBRARIES} rgbd_utils)
+target_link_libraries(convert_quaterion_angles_to_matrix /usr/local/lib/libaruco.so aruco ${PCL_LIBRARIES} ${catkin_LIBRARIES} rgbd_utils image_processing)
 
 add_executable(record_object_and_eef_position src/record_object_and_eef_position.cpp ${all_sources} src/parameters.hpp)
 target_link_libraries(record_object_and_eef_position /usr/local/lib/libaruco.so aruco ${OpenCV_LIBRARIES} ${PCL_LIBRARIES} ${catkin_LIBRARIES} rgbd_utils image_processing)

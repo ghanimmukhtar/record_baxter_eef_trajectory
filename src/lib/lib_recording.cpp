@@ -151,6 +151,27 @@ void dispaly_image(std::string path, ros::Publisher& image_pub){
     image_pub.publish(msg);
 }
 
+void get_angles_from_rotation_matrix(tf::Matrix3x3& rotation_matrix,
+                                     std::vector<double>& returned_angles,
+                                     std::string my_type){
+    double roll, pitch, yaw;
+    tf::Quaternion my_angles;
+    returned_angles.clear();
+    if(strcmp(my_type.c_str(), "RPY") == 0){
+        rotation_matrix.getRPY(roll, pitch, yaw);
+        returned_angles.push_back(roll);
+        returned_angles.push_back(pitch);
+        returned_angles.push_back(yaw);
+    }
+    else{
+        rotation_matrix.getRotation(my_angles);
+        returned_angles.push_back(my_angles.getX());
+        returned_angles.push_back(my_angles.getY());
+        returned_angles.push_back(my_angles.getZ());
+        returned_angles.push_back(my_angles.getW());
+    }
+}
+
 void set_camera_poses_and_transformation(Data_config& parameters){
     tf::Quaternion my_angles;
     //from roslaunch file given pose construct a vector with x, y, z, roll, pitch and yaw

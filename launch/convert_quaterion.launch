@@ -1,6 +1,6 @@
 <launch>
 
-  <param name="camera_pose" value="1.8 0.4 0.4 0.0 0.5 -3.14"/>
+  <param name="camera_pose" value="0.898 -0.225 0.813 -0.392 -0.0197 0.949 0.0723"/>
   <param name="camera_frame_choice" value="rgb"/>
 
   <node name="convert_quaterion_to_matrix" pkg="record_baxter_eef_trajectory" type="convert_quaterion_angles_to_matrix" output="screen" launch-prefix="gdb -ex run --args">
