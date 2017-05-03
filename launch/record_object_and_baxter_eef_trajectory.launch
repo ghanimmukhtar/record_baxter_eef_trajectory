@@ -1,6 +1,8 @@
 <launch>
 
   <param name="the_rate" value="10.0"/>
+  <param name="camera_pose" value="1.123 0.153 0.454 -2.659 -0.087 1.832"/>
+  <param name="camera_frame_choice" value="rgb"/>
 
   <!--changing fingers type node-->
     <!--arg name="my_link" default="left_hand"/>
