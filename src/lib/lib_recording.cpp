@@ -84,7 +84,13 @@ void record_object_position(const visual_functionalities::object_qr_positionCons
                                     object_position_topic->object_qr_position.point.z});
         parameters.get_objects_positions_map().insert( std::pair<int, std::vector<std::vector<double> > >(object_position_topic->qr_id.data, object_positions) );
     }
-    else if(parameters.get_objects_positions_map().find(object_position_topic->qr_id.data) != parameters.get_objects_positions_map().end()){
+    else if(parameters.get_objects_positions_map().find(object_position_topic->qr_id.data) !=
+            parameters.get_objects_positions_map().end()){
+//        ROS_INFO_STREAM("TRAJECTORY_RECORDER: Recording position for id: " << object_position_topic->qr_id.data);
+//        ROS_INFO_STREAM("TRAJECTORY_RECORDER: X is: " << object_position_topic->object_qr_position.point.x);
+//        ROS_INFO_STREAM("TRAJECTORY_RECORDER: Y is: " << object_position_topic->object_qr_position.point.y);
+//        ROS_INFO_STREAM("TRAJECTORY_RECORDER: Z is: " << object_position_topic->object_qr_position.point.z);
+//        ROS_WARN("********************************************");
         parameters.get_objects_positions_map().find(object_position_topic->qr_id.data)->second.push_back(
         {object_position_topic->object_qr_position.point.x,
          object_position_topic->object_qr_position.point.y,
@@ -167,18 +173,18 @@ void record_traj_and_object_position(Data_config& parameters,
     while(ros::ok()){
         //ROS_INFO("go go go");
         //dispaly_image(not_working_image_path, image_pub);
-//        if(parameters.get_pressed() && parameters.get_lower_botton_pressed()){
-        if(parameters.get_start_recording() == 1){
-//            if(parameters.get_release()){
-//                parameters.set_release(false);
-//                parameters.set_toggle(true);
-//            }
+        if(parameters.get_pressed() && parameters.get_lower_botton_pressed()){
+//        if(parameters.get_start_recording() == 1){
+            if(parameters.get_release()){
+                parameters.set_release(false);
+                parameters.set_toggle(true);
+            }
 
             //get current eef pose
             Eigen::VectorXd current_values(6);
             current_values = parameters.get_left_eef_pose_rpy();
             //ROS_INFO_STREAM("TRAJECTORY RECORDER: EEF pose is: " << current_values);
-//            if ((current_values - old_values).norm() > parameters.get_epsilon()){
+            if ((current_values - old_values).norm() > parameters.get_epsilon()){
                 time_now = ros::Time::now().toSec();
 
                 std::vector<double> inner_left_traj;
@@ -206,26 +212,35 @@ void record_traj_and_object_position(Data_config& parameters,
                     for(int i = parameters.get_objects_positions_map().size(); i < parameters.get_number_of_markers(); i++)
                         object_position_vector.push_back({0, 0, 0});
                 }
-                else if(parameters.get_objects_positions_map().size() == parameters.get_number_of_markers())
-                    for(auto& x: parameters.get_objects_positions_map())
-                        object_position_vector.push_back(*x.second.end());
+                else if(parameters.get_objects_positions_map().size() == parameters.get_number_of_markers()){
+                    for(auto& x: parameters.get_objects_positions_map()){
+                        ROS_WARN_STREAM("TRAJECTORY_RECORDER: Storing the object position with id: "
+                                        << x.first);
+                        for(size_t i = 0; i < x.second[x.second.size() - 1].size(); i++)
+                            ROS_INFO_STREAM("TRAJECTORY_RECORDER: Element" << i << " is: "
+                                            << x.second[x.second.size() - 1][i]);
 
-                ROS_ERROR_STREAM("this iteration duration is: " << ros::Time::now().toSec() - time_now);
+                        ROS_WARN("********************************************");
+                        object_position_vector.push_back(x.second[x.second.size() - 1]);
+                    }
+                }
+
+                //ROS_ERROR_STREAM("this iteration duration is: " << ros::Time::now().toSec() - time_now);
             }
             nb_iter++;
-//        }
-//        else{
-//            if(parameters.get_toggle()){
-//                ROS_ERROR("I need two buttons to be pressed simultaneously ...........");
-//                parameters.set_release(true);
-//                parameters.set_lower_button_pressed(false);
+        }
+        else{
+            if(parameters.get_toggle()){
+                ROS_ERROR("I need two buttons to be pressed simultaneously ...........");
+                parameters.set_release(true);
+                parameters.set_lower_button_pressed(false);
 
-//            }
-//        }
-//        if(parameters.get_toggle() && !parameters.get_lower_botton_pressed()){
-        if(parameters.get_start_recording() == 2){
+            }
+        }
+        if(parameters.get_toggle() && !parameters.get_lower_botton_pressed()){
+//        if(parameters.get_start_recording() == 2){
             parameters.set_start_recording(0);
-//            parameters.set_toggle(false);
+            parameters.set_toggle(false);
             std::vector<std::vector<double>> output_of_conversion;
             ROS_INFO_STREAM("TRAJECTORY RECORDER: EEF pose vector size is: " << left_eef_trajectory.size());
             ROS_INFO_STREAM("TRAJECTORY RECORDER: Object position map size is: " << parameters.get_objects_positions_map().size());
