@@ -46,6 +46,8 @@ void locate_object(const sensor_msgs::ImageConstPtr& depth_msg, Data_config& par
  * */
 void locate_left_eef_pose(baxter_core_msgs::EndpointState& l_eef_feedback, Data_config& parameters);
 
+void locate_right_eef_pose(baxter_core_msgs::EndpointState& r_eef_feedback, Data_config& parameters);
+
 /*Convert object position from camera frame to robot frame
  * input: object position in camera frame, and a vector to hold the transformation into robot frame
  * return: nothing but it record the trajectory and object position in relevant files

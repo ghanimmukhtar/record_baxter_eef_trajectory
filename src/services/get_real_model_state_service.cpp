@@ -35,11 +35,14 @@ bool get_real_model_state_service_callback(record_baxter_eef_trajectory::Getreal
                                            ros::NodeHandle& nh,
                                            image_transport::ImageTransport& it_){
 
-    parameters.get_camera_char().readFromXMLFile("/home/mukhtar/git/automatic_camera_robot_cal/data/camera_param_baxter.xml");
+    parameters.get_camera_char().readFromXMLFile("/home/maestre/baxter_ws/src/record_baxter_eef_trajectory/data/camera_param_baxter.xml");
 
     //set params in launch file to construct the transformation matrix
+    double the_rate;
+    nh.getParam("the_rate", the_rate);
     nh.getParam("camera_pose", parameters.get_camera_frame_pose());
     nh.getParam("camera_frame_choice", parameters.get_camera_frame_choice());
+    parameters.set_the_rate(the_rate);
 
     //subscribers
     image_transport::Subscriber in_image = it_.subscribe("/camera/rgb/image_rect_color", 1, imageCb);
@@ -75,19 +78,26 @@ bool get_real_model_state_service_callback(record_baxter_eef_trajectory::Getreal
     usleep(4e6);
 
     Eigen::Vector3d obj_pos = parameters.get_object_position(req.object_index);
-//    ROS_ERROR_STREAM("previous conversion obj_pos" << obj_pos);
+    ROS_ERROR_STREAM("previous conversion obj_pos" << obj_pos);
     Eigen::Vector4d extended_vector;
     extended_vector << obj_pos[0],
                        obj_pos[1],
                        obj_pos[2],
                        1;
     std::vector<Eigen::Vector4d> vector;
+    Eigen::Vector3d new_position;
     vector.push_back(extended_vector);
     std::vector<std::vector<double>> output_of_conversion;
     convert_whole_object_positions_vector(parameters, vector, output_of_conversion);
     std::vector<double> obj_pos_converted = output_of_conversion[0];
+//    convert_object_position_to_robot_base(obj_pos, new_position);
 
 //    ROS_ERROR_STREAM("Converted obj_pos" << obj_pos_converted);
+
+//    res.model_state = {new_position(0),
+//                       new_position(1),
+//                       new_position(2),
+//                       0, 0, 0};
 
     res.model_state = {obj_pos_converted[0],
                        obj_pos_converted[1],

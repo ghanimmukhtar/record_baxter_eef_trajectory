@@ -17,6 +17,11 @@ void left_eef_Callback(baxter_core_msgs::EndpointState l_eef_feedback){
     locate_left_eef_pose(l_eef_feedback, parameters);
 }
 
+//call back that register end effector pose and rearrange the orientation in RPY
+void right_eef_Callback(baxter_core_msgs::EndpointState r_eef_feedback){
+    locate_right_eef_pose(r_eef_feedback, parameters);
+}
+
 bool get_real_eef_pose_service_callback(record_baxter_eef_trajectory::Getrealeefpose::Request &req,
                                            record_baxter_eef_trajectory::Getrealeefpose::Response &res,
                                            ros::NodeHandle& nh,
@@ -24,6 +29,7 @@ bool get_real_eef_pose_service_callback(record_baxter_eef_trajectory::Getrealeef
 
     //subscribers
     ros::Subscriber sub_l_eef_msg = nh.subscribe<baxter_core_msgs::EndpointState>("/robot/limb/left/endpoint_state", 10, left_eef_Callback);
+    ros::Subscriber sub_r_eef_msg = nh.subscribe<baxter_core_msgs::EndpointState>("/robot/limb/right/endpoint_state", 10, right_eef_Callback);
 
     ros::AsyncSpinner my_spinner(1);
     my_spinner.start();
@@ -38,8 +44,12 @@ bool get_real_eef_pose_service_callback(record_baxter_eef_trajectory::Getrealeef
         res.pose = {current_values(0), current_values(1), current_values(2),
                     current_values(3), current_values(4), current_values(5)};
     } else {
-        ROS_ERROR_STREAM("get_real_eef_pose_service_callback - only left eef coded now");
-        res.pose = {};
+        //get current eef pose
+        Eigen::VectorXd current_values(6);
+        current_values = parameters.get_right_eef_pose_rpy();
+
+        res.pose = {current_values(0), current_values(1), current_values(2),
+                    current_values(3), current_values(4), current_values(5)};
     }
 
     ROS_INFO("Done.");

@@ -22,7 +22,7 @@
 struct Parameters {
     ///////// OBJECT tracking variables
     // object position (x, y, z) in real world in robot base frame
-    size_t number_of_markers = 2;
+    size_t number_of_markers = 1;
     cv_bridge::CvImagePtr cv_ptr;
     std::vector<Eigen::Vector3d> object_position_vector;
 
@@ -47,6 +47,10 @@ struct Parameters {
     Eigen::VectorXd left_eef_pose_rpy;
     geometry_msgs::Pose left_eef_pose_quat;
     tf::Quaternion left_eef_rpy_orientation;
+    // right end effector pose
+    Eigen::VectorXd right_eef_pose_rpy;
+    geometry_msgs::Pose right_eef_pose_quat;
+    tf::Quaternion right_eef_rpy_orientation;
 
     std::string left_eef_trajectory_file_name = "";
     /////// SHARED variables
@@ -147,12 +151,24 @@ public:
         return params.left_eef_pose_rpy;
     }
 
+    Eigen::VectorXd get_right_eef_pose_rpy(){
+        return params.right_eef_pose_rpy;
+    }
+
     geometry_msgs::Pose& get_left_eef_pose_quat(){
         return params.left_eef_pose_quat;
     }
 
+    geometry_msgs::Pose& get_right_eef_pose_quat(){
+        return params.right_eef_pose_quat;
+    }
+
     tf::Quaternion& get_left_eef_rpy_orientation(){
         return params.left_eef_rpy_orientation;
+    }
+
+    tf::Quaternion& get_right_eef_rpy_orientation(){
+        return params.right_eef_rpy_orientation;
     }
 
     std::string& get_left_eef_trajectory_file_name(){
@@ -270,14 +286,25 @@ public:
         params.left_eef_pose_rpy = left_eef_pose_rpy;
     }
 
+    void set_right_eef_pose_rpy(Eigen::VectorXd& right_eef_pose_rpy){
+        params.right_eef_pose_rpy = right_eef_pose_rpy;
+    }
+
     void set_left_eef_pose_quat(geometry_msgs::Pose& left_eef_pose_quat){
         params.left_eef_pose_quat = left_eef_pose_quat;
     }
 
-    void set_left_eeft_rpy_orientation(tf::Quaternion& left_eef_rpy_orientation){
+    void set_right_eef_pose_quat(geometry_msgs::Pose& right_eef_pose_quat){
+        params.right_eef_pose_quat = right_eef_pose_quat;
+    }
+
+    void set_left_eef_rpy_orientation(tf::Quaternion& left_eef_rpy_orientation){
         params.left_eef_rpy_orientation = left_eef_rpy_orientation;
     }
 
+    void set_right_eef_rpy_orientation(tf::Quaternion& right_eef_rpy_orientation){
+        params.right_eef_rpy_orientation = right_eef_rpy_orientation;
+    }
 
     void set_left_eef_trajectory_file_name(std::string file_name){
         params.left_eef_trajectory_file_name = file_name;

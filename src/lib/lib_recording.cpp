@@ -59,7 +59,7 @@ void locate_object(const sensor_msgs::ImageConstPtr& depth_msg, Data_config& par
         sensor_msgs::PointCloud2 ptcl_msg = converter.get_pointcloud();
         image_processing::PointCloudT::Ptr input_cloud(new image_processing::PointCloudT);
         pcl::fromROSMsg(ptcl_msg, *input_cloud);
-        ROS_ERROR_STREAM("the markers vector size is: " << parameters.get_markers().size());
+        //ROS_ERROR_STREAM("the markers vector size is: " << parameters.get_markers().size());
         int i;
         for(int j = 0; j < parameters.get_number_of_markers(); j++){
             if(parameters.get_markers()[j].id == 3)
@@ -71,9 +71,9 @@ void locate_object(const sensor_msgs::ImageConstPtr& depth_msg, Data_config& par
             if(object_position[0] == object_position[0] && object_position[1] == object_position[1] && object_position[2] == object_position[2])
                 parameters.set_object_position(object_position, i);
         }
-        for(size_t s = 0; s < parameters.get_object_position_vector().size(); s++)
+        /*for(size_t s = 0; s < parameters.get_object_position_vector().size(); s++)
             ROS_ERROR_STREAM("locate_object " << s << " : " << parameters.get_object_position_vector()[s]);
-        ROS_ERROR_STREAM(" ");
+        ROS_ERROR_STREAM(" ");*/
     }
 }
 
@@ -88,13 +88,34 @@ void locate_left_eef_pose(baxter_core_msgs::EndpointState& l_eef_feedback, Data_
     tf::Matrix3x3 m(parameters.get_left_eef_rpy_orientation());
     m.getRPY(roll, pitch, yaw);
     left_end_effector_pose << l_eef_feedback.pose.position.x,
-            l_eef_feedback.pose.position.y,
-            l_eef_feedback.pose.position.z,
+                              l_eef_feedback.pose.position.y,
+                              l_eef_feedback.pose.position.z,
+                              roll,
+                              pitch,
+                              yaw;
+
+    parameters.set_left_eef_pose_rpy(left_end_effector_pose);
+
+}
+
+//get baxter right eef pose
+void locate_right_eef_pose(baxter_core_msgs::EndpointState& r_eef_feedback, Data_config& parameters){
+    Eigen::VectorXd right_end_effector_pose(6);
+    parameters.set_right_eef_pose_quat(r_eef_feedback.pose);
+
+    tf::quaternionMsgToTF(parameters.get_right_eef_pose_quat().orientation, parameters.get_right_eef_rpy_orientation());
+
+    double roll, yaw, pitch;
+    tf::Matrix3x3 m(parameters.get_right_eef_rpy_orientation());
+    m.getRPY(roll, pitch, yaw);
+    right_end_effector_pose << r_eef_feedback.pose.position.x,
+            r_eef_feedback.pose.position.y,
+            r_eef_feedback.pose.position.z,
             roll,
             pitch,
             yaw;
 
-    parameters.set_left_eef_pose_rpy(left_end_effector_pose);
+    parameters.set_right_eef_pose_rpy(right_end_effector_pose);
 
 }
 
@@ -105,14 +126,14 @@ void convert_object_position_to_robot_base(Eigen::Vector3d& object_pose_in_camer
     //std::string child_frame = "/camera_depth_optical_frame";
     std::string child_frame = "/camera_rgb_optical_frame";
     std::string parent_frame = "/world";
-    /*try{
+    try{
         listener.lookupTransform(child_frame, parent_frame,
                                  ros::Time::now(), stamped_transform);
     }
     catch (tf::TransformException &ex) {
         ROS_ERROR("%s",ex.what());
         ros::Duration(1.0).sleep();
-    }*/
+    }
 
     geometry_msgs::PointStamped camera_point;
     geometry_msgs::PointStamped base_point;
@@ -199,6 +220,9 @@ void convert_whole_object_positions_vector(Data_config& parameters,
         inner_output.push_back(opv(0));
         inner_output.push_back(opv(1));
         inner_output.push_back(opv(2));
+        for(size_t s = 0; s < inner_output.size(); s++)
+            ROS_ERROR_STREAM("conversion of object pose gives " << " : " << inner_output[s]);
+        ROS_ERROR_STREAM(" ");
         output_of_conversion.push_back(inner_output);
     }
 }
