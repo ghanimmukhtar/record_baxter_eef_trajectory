@@ -22,6 +22,7 @@ int main(int argc, char **argv)
 
 
     tf::Quaternion my_angles;
+    my_angles.setRPY(0.0, 0.5, -3.14);
     my_angles.setW(0.500);
     my_angles.setX(0.500);
     my_angles.setY(-0.500);
@@ -38,14 +39,14 @@ int main(int argc, char **argv)
     tf::Matrix3x3 rotation(quat);*/
 
     Eigen::Matrix4d T_b_o;
-    /*T_b_o << 0.107771,  0.816759,  -0.77785,  0.899714,
-             1.05818,  0.029358,  0.166672, -0.203503,
-           0.0456001, -0.769741,  -0.67249,  0.814146,
-            0,                0,        0,        1;*/
-    T_b_o <<  -0.006,  0.48, -0.877,  0.95,
+    T_b_o <<    -1.0227, -0.000855236,   -0.0332196,     0.292469,
+                0.0028847,     0.795614,    -0.671273,      0.66033,
+                0.0547889,    -0.575098,    -0.685392,     0.740042,
+                        0,            0,            0,            1;
+    /*T_b_o <<  -0.006,  0.48, -0.877,  0.95,
               1.02, -0.05, -0.02, -0.03,
             0.03, -0.92, -0.6,  0.845,
-                    0 ,        0,         0,         1;
+                    0 ,        0,         0,         1;*/
 
     Eigen::Matrix4d T_b_c;
     /*T_b_c << rotation[0][0], rotation[0][1], rotation[0][2],0.85,
@@ -63,6 +64,11 @@ int main(int argc, char **argv)
                            1.09941, 0.0265071, 0.0708362,
                          0.0733808, -0.776962, -0.671882);*/
 
+    /*ROS_ERROR_STREAM("Quaternion angles are: ");
+    ROS_ERROR_STREAM("for x: " << my_angles.getX());
+    ROS_ERROR_STREAM("for y: " << my_angles.getY());
+    ROS_ERROR_STREAM("for z: " << my_angles.getZ());
+    ROS_ERROR_STREAM("for w: " << my_angles.getW());*/
     get_angles_from_rotation_matrix(rotation2, my_angles_2);
     ROS_ERROR_STREAM("Quaternion angles are: ");
     ROS_ERROR_STREAM("for x: " << my_angles_2[0]);

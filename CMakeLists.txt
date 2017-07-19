@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(record_baxter_eef_trajectory)
 
-
 find_package(catkin REQUIRED COMPONENTS
   cv_bridge
   moveit_ros_planning_interface
@@ -11,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   std_msgs
   tf
+  visual_functionalities
   message_generation
 )
 
@@ -32,18 +32,6 @@ find_library(IMAGE_PROCESSING_LIBRARY NAMES image_processing)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -fPIC")
 
-add_service_files(
-  FILES
-  Recordtraj.srv
-  Getrealmodelstate.srv
-  Getrealeefpose.srv
-)
-
-generate_messages(
-  DEPENDENCIES
-  std_msgs
-)
-
 catkin_package(
   INCLUDE_DIRS include
   CATKIN_DEPENDS message_runtime
@@ -61,30 +49,8 @@ add_executable(record_baxter_eef_trajectory src/record_baxter_eef_trajectory.cpp
 target_link_libraries(record_baxter_eef_trajectory ${catkin_LIBRARIES}  )
 
 add_executable(convert_quaterion_angles_to_matrix src/convert_quaterion_angles_to_matrix.cpp ${all_sources} src/parameters.hpp)
-<<<<<<< HEAD
 target_link_libraries(convert_quaterion_angles_to_matrix /usr/local/lib/libaruco.so aruco ${PCL_LIBRARIES} ${catkin_LIBRARIES} rgbd_utils image_processing)
-=======
-target_link_libraries(convert_quaterion_angles_to_matrix /usr/local/lib/libaruco.so ${catkin_LIBRARIES} ${PCL_LIBRARIES} rgbd_utils)
->>>>>>> 7f14237eb65ba22bb3e1b2b5752759fccdd34d6a
+
 
 add_executable(record_object_and_eef_position src/record_object_and_eef_position.cpp ${all_sources} src/parameters.hpp)
 target_link_libraries(record_object_and_eef_position /usr/local/lib/libaruco.so aruco ${OpenCV_LIBRARIES} ${PCL_LIBRARIES} ${catkin_LIBRARIES} rgbd_utils image_processing)
-
-## service program
-add_executable(record_left_eef_trajectory_service src/services/record_left_eef_trajectory_service.cpp ${all_sources} src/parameters.hpp)
-target_link_libraries(record_left_eef_trajectory_service /usr/local/lib/libaruco.so aruco ${OpenCV_LIBRARIES} ${PCL_LIBRARIES} 
-${catkin_LIBRARIES} ${Boost_LIBRARIES}
-rgbd_utils image_processing )
-add_dependencies(record_left_eef_trajectory_service ${catkin_EXPORTED_TARGETS})
-
-add_executable(get_real_model_state_service src/services/get_real_model_state_service.cpp ${all_sources} src/parameters.hpp)
-target_link_libraries(get_real_model_state_service /usr/local/lib/libaruco.so aruco ${OpenCV_LIBRARIES} ${PCL_LIBRARIES}
-${catkin_LIBRARIES} ${Boost_LIBRARIES}
-rgbd_utils image_processing )
-add_dependencies(get_real_model_state_service ${catkin_EXPORTED_TARGETS})
-
-add_executable(get_real_eef_pose_service src/services/get_real_eef_pose_service.cpp ${all_sources} src/parameters.hpp)
-target_link_libraries(get_real_eef_pose_service /usr/local/lib/libaruco.so aruco ${OpenCV_LIBRARIES} ${PCL_LIBRARIES}
-${catkin_LIBRARIES} ${Boost_LIBRARIES}
-rgbd_utils image_processing )
-add_dependencies(get_real_eef_pose_service ${catkin_EXPORTED_TARGETS})
