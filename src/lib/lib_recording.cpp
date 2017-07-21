@@ -45,7 +45,9 @@ void get_angles_from_rotation_matrix(tf::Matrix3x3& rotation_matrix,
 
 void write_data(Data_config& parameters,
                 std::vector<std::vector<double>>& left_eef_trajectory,
-                std::vector<std::vector<double>>& object_positions_vector, std::ofstream& the_file){
+                std::vector<std::vector<double>>& object_positions_vector,
+                std::ofstream& the_eef_file,
+                std::ofstream& the_obj_file){
     ROS_INFO_STREAM("TRAJECTORY RECORDER: Trying to write data, eef traje is size: "
                     << left_eef_trajectory.size()
                     << " and object_position is: "
@@ -58,17 +60,18 @@ void write_data(Data_config& parameters,
         outter_itr++){
         std::vector<double>::iterator inner_itr;
         for(inner_itr = (*outter_itr).begin(); inner_itr != (*outter_itr).end(); inner_itr++) // eef pos and rotation
-            the_file << (*inner_itr) << ",";
+            the_eef_file << (*inner_itr) << ",";
 
-        for(size_t i = 0; i < parameters.get_objects_positions_map().size(); i++){ // obj position per object
+        for(size_t i = 0; i < parameters.get_objects_positions_map().size(); i++){ // obj position
             for(inner_itr = (*outter_itr_object).begin(); inner_itr != (*outter_itr_object).end(); inner_itr++)
-                the_file << (*inner_itr) << ",";
-            the_file << 0 << "," << 0 << "," << 0 << ","; // obj rotation
+                the_obj_file << (*inner_itr) << ",";
+            the_obj_file << 0 << "," << 0 << "," << 0 << ","; // obj rotation
             ++outter_itr_object;
         }
     }
 
-    the_file << "\n";
+    the_eef_file << "\n";
+    the_obj_file << "\n";
 }
 
 void record_object_position(const visual_functionalities::object_qr_positionConstPtr& object_position_topic,
@@ -154,7 +157,8 @@ void convert_whole_object_positions_vector(Data_config& parameters,
 void record_traj_and_object_position(Data_config& parameters,
                                      std::vector<std::vector<double>>& left_eef_trajectory,
                                      ros::Publisher& image_pub,
-                                     std::ofstream& the_file){
+                                     std::ofstream& the_eef_file,
+                                     std::ofstream& the_obj_file){
 
     Eigen::VectorXd old_values(6);
     old_values = parameters.get_left_eef_pose_rpy();
@@ -231,7 +235,7 @@ void record_traj_and_object_position(Data_config& parameters,
         }
         else{
             if(parameters.get_toggle()){
-                ROS_ERROR("I need two buttons to be pressed simultaneously ...........");
+                ROS_ERROR("Hold the two lateral buttons to start the recording.");
                 parameters.set_release(true);
                 parameters.set_lower_button_pressed(false);
 
@@ -247,7 +251,7 @@ void record_traj_and_object_position(Data_config& parameters,
             if(!parameters.get_objects_positions_map().empty())
                 convert_whole_object_positions_vector(parameters, object_position_vector, output_of_conversion);
 
-            write_data(parameters, left_eef_trajectory, output_of_conversion, the_file);
+            write_data(parameters, left_eef_trajectory, output_of_conversion, the_eef_file, the_obj_file);
             left_eef_trajectory.clear();
             object_position_vector.clear();
             parameters.get_objects_positions_map().clear();

@@ -25,7 +25,8 @@ void convert_whole_object_positions_vector(Data_config &parameters,
 
 void write_data(std::vector<std::vector<double>>& left_eef_trajectory_and_object_vector,
                 std::vector<std::vector<double>>& object_positions_vector,
-                std::ofstream& the_file);
+                std::ofstream& the_eef_file,
+                std::ofstream& the_obj_file);
 
 /*Recording method that uses all relevant parameters to control starting/stopping of recording
  * input: the Data_config class
@@ -33,4 +34,6 @@ void write_data(std::vector<std::vector<double>>& left_eef_trajectory_and_object
  * */
 void record_traj_and_object_position(Data_config& parameters,
                                      std::vector<std::vector<double> > &left_eef_trajectory,
-                                     ros::Publisher &image_pub, std::ofstream &the_file);
+                                     ros::Publisher &image_pub,
+                                     std::ofstream &the_file,
+                                     std::ofstream &the_obj_file);

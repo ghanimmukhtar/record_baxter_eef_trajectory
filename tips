@@ -25,26 +25,18 @@ rosrun tf tf_echo /base /camera_link
 
 once we have the matrix transformation from tf tf_echo, we copy the translation and rotation part and publish a static transformation:
 
-crustcrawler transformation matrix:
- -0.700171    -0.1149  -0.704669      0.898
-  0.144045  -0.989404  0.0182026     -0.225
- -0.699293 -0.0887589   0.709303      0.813
-         0          0          0          1
-
-
-
 e.g.:
 
-Translation: [0.760, 0.799, 0.907]
-- Rotation: in Quaternion [0.336, 0.351, -0.588, 0.647]
-            in RPY (radian) [0.043, 1.014, -1.450]
-            in RPY (degree) [2.492, 58.080, -83.103]
+- Translation: [0.222, 0.052, 1.010]
+- Rotation: in Quaternion [-0.004, 0.406, -0.002, 0.914]
+            in RPY (radian) [-0.014, 0.837, -0.011]
+            in RPY (degree) [-0.828, 47.965, -0.654]
 
 Stop previous runs.
 
 Run static transformation:
 
-rosrun tf static_transform_publisher 1.134 0.14 0.46 -0.504 -0.091 0.853 -0.097 /base /camera_link 100
+rosrun tf static_transform_publisher 0.222 0.052 0.9 -0.004 0.406 -0.002 0.914 /base /camera_link 100
 
 there is an offset in the translation, you can modify (by hand) this values until you get the desired accuracy
 

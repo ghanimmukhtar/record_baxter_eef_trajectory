@@ -1,7 +1,9 @@
 <launch>
-
+  <arg name="effect" />
   <param name="the_rate" value="10.0"/>
-  <param name="feedback_file" value="$(find record_baxter_eef_trajectory)/feedback/feedback_file.csv"/>
+  <param name="epsilon" value="0.01"/>
+  <param name="feedback_eef_file" value="$(find record_baxter_eef_trajectory)/feedback/$(arg effect)_eef_file.csv"/>
+  <param name="feedback_obj_file" value="$(find record_baxter_eef_trajectory)/feedback/$(arg effect)_obj_file.csv"/>
   <param name="child_frame" value="/camera_rgb_optical_frame"/>
   <param name="parent_frame" value="/world"/>
 

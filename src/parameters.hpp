@@ -48,8 +48,8 @@ struct Parameters {
     int8_t pressed;
     int64_t start_recording = 0;
     bool release = true, toggle = false, l_lower_button_pressed = false;
-    double epsilon = 0.01;
-    double the_rate = 50.0;
+    double epsilon;
+    double the_rate;
 };
 
 class Data_config{

@@ -46,21 +46,25 @@ int main(int argc, char **argv)
   my_spinner.start();
   usleep(1e6);
 
-  std::string feedback_file;
+  std::string feedback_eef_file, feedback_obj_file;
   double the_rate;
   n.getParam("the_rate", the_rate);
-  n.getParam("feedback_file", feedback_file);
+  n.getParam("epsilon", parameters.get_epsilon());
+  n.getParam("feedback_eef_file", feedback_eef_file);
+  n.getParam("feedback_obj_file", feedback_obj_file);
   n.getParam("child_frame", parameters.get_child_frame());
   n.getParam("parent_frame", parameters.get_parent_frame());
   parameters.set_the_rate(the_rate);
 
-  std::ofstream left_eef_trajectory_file(feedback_file, std::ofstream::out | std::ofstream::app);
+  std::ofstream left_eef_trajectory_file(feedback_eef_file, std::ofstream::out | std::ofstream::trunc);
+  std::ofstream obj_trajectory_file(feedback_obj_file, std::ofstream::out | std::ofstream::trunc);
 
   std::vector<std::vector<double>> left_eef_trajectory;
 
-  record_traj_and_object_position(parameters, left_eef_trajectory, image_publisher, left_eef_trajectory_file);
+  record_traj_and_object_position(parameters, left_eef_trajectory, image_publisher, left_eef_trajectory_file, obj_trajectory_file);
 
   left_eef_trajectory_file.close();
+  obj_trajectory_file.close();
 
   return 0;
 }
