@@ -4,7 +4,10 @@ void get_angles_from_rotation_matrix(tf::Matrix3x3& rotation_matrix,
                                      std::vector<double>& returned_angles,
                                      std::string my_type = "quaternion");
 
-void record_object_position(const visual_functionalities::object_qr_positionConstPtr& object_position,
+void record_qr_position(const visual_functionalities::object_qr_positionConstPtr& object_position,
+                            Data_config &parameters);
+
+void record_blob_position(const visual_functionalities::object_blob_positionConstPtr& object_position,
                             Data_config &parameters);
 
 /*get baxter left eef pose with orientation expressed as RPY

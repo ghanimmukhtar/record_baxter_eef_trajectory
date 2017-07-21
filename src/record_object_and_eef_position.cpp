@@ -22,7 +22,13 @@ void left_lower_button_Callback(baxter_core_msgs::DigitalIOState l_lower_button_
 void object_qr_position_Callback(const visual_functionalities::object_qr_positionConstPtr& object_position){
     if(parameters.get_pressed() && parameters.get_lower_botton_pressed())
     //if(parameters.get_start_recording() == 1)
-        record_object_position(object_position, parameters);
+        record_qr_position(object_position, parameters);
+}
+
+void object_blob_position_Callback(const visual_functionalities::object_blob_positionConstPtr& object_position){
+    if(parameters.get_pressed() && parameters.get_lower_botton_pressed())
+    //if(parameters.get_start_recording() == 1)
+        record_blob_position(object_position, parameters);
 }
 
 void start_recording_Callback(const std_msgs::Int64ConstPtr& start){
@@ -39,6 +45,7 @@ int main(int argc, char **argv)
   ros::Subscriber sub_l_cuf_msg = n.subscribe<baxter_core_msgs::DigitalIOState>("/robot/digital_io/left_lower_cuff/state", 10, left_cuf_Callback);
   ros::Subscriber sub_l_lower_button = n.subscribe<baxter_core_msgs::DigitalIOState>("/robot/digital_io/left_lower_button/state", 10, left_lower_button_Callback);
   ros::Subscriber object_qr_position_sub = n.subscribe<visual_functionalities::object_qr_position>("/object_qr_position", 10, object_qr_position_Callback);
+  ros::Subscriber object_blob_position_sub = n.subscribe<visual_functionalities::object_blob_position>("/object_blob_position", 10, object_blob_position_Callback);
   //ros::Subscriber start_recording_sub = n.subscribe<std_msgs::Int64>("/start_recording", 10, start_recording_Callback);
   ros::Publisher image_publisher = n.advertise<sensor_msgs::Image>("/robot/xdisplay", 1);
 
@@ -49,6 +56,7 @@ int main(int argc, char **argv)
   std::string feedback_eef_file, feedback_obj_file;
   double the_rate;
   n.getParam("the_rate", the_rate);
+  n.getParam("detection_method", parameters.get_detection_method());
   n.getParam("epsilon", parameters.get_epsilon());
   n.getParam("feedback_eef_file", feedback_eef_file);
   n.getParam("feedback_obj_file", feedback_obj_file);

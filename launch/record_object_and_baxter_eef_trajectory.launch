@@ -6,6 +6,7 @@
   <param name="feedback_obj_file" value="$(find record_baxter_eef_trajectory)/feedback/$(arg effect)_obj_file.csv"/>
   <param name="child_frame" value="/camera_rgb_optical_frame"/>
   <param name="parent_frame" value="/world"/>
+  <param name="detection_method" value="blobs"/>
 
 
   <!--node name="record_eef_trajectory_and_object_position_service" pkg="record_baxter_eef_trajectory" type="record_object_and_eef_position" launch-prefix="gdb -ex run -r-args"  output="screen"-->

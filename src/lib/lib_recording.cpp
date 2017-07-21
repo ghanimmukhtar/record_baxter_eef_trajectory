@@ -74,8 +74,8 @@ void write_data(Data_config& parameters,
     the_obj_file << "\n";
 }
 
-void record_object_position(const visual_functionalities::object_qr_positionConstPtr& object_position_topic,
-                            Data_config& parameters){
+void record_qr_position(const visual_functionalities::object_qr_positionConstPtr& object_position_topic,
+                        Data_config& parameters){
     //ROS_INFO("TRAJECTORY RECORDER: Hello I am recording object position");
     //if the map is empty, this is first time to insert then just insert
     if(parameters.get_objects_positions_map().find(object_position_topic->qr_id.data) == parameters.get_objects_positions_map().end() &&
@@ -89,11 +89,11 @@ void record_object_position(const visual_functionalities::object_qr_positionCons
     }
     else if(parameters.get_objects_positions_map().find(object_position_topic->qr_id.data) !=
             parameters.get_objects_positions_map().end()){
-//        ROS_INFO_STREAM("TRAJECTORY_RECORDER: Recording position for id: " << object_position_topic->qr_id.data);
-//        ROS_INFO_STREAM("TRAJECTORY_RECORDER: X is: " << object_position_topic->object_qr_position.point.x);
-//        ROS_INFO_STREAM("TRAJECTORY_RECORDER: Y is: " << object_position_topic->object_qr_position.point.y);
-//        ROS_INFO_STREAM("TRAJECTORY_RECORDER: Z is: " << object_position_topic->object_qr_position.point.z);
-//        ROS_WARN("********************************************");
+        //        ROS_INFO_STREAM("TRAJECTORY_RECORDER: Recording position for id: " << object_position_topic->qr_id.data);
+        //        ROS_INFO_STREAM("TRAJECTORY_RECORDER: X is: " << object_position_topic->object_qr_position.point.x);
+        //        ROS_INFO_STREAM("TRAJECTORY_RECORDER: Y is: " << object_position_topic->object_qr_position.point.y);
+        //        ROS_INFO_STREAM("TRAJECTORY_RECORDER: Z is: " << object_position_topic->object_qr_position.point.z);
+        //        ROS_WARN("********************************************");
         parameters.get_objects_positions_map().find(object_position_topic->qr_id.data)->second.push_back(
         {object_position_topic->object_qr_position.point.x,
          object_position_topic->object_qr_position.point.y,
@@ -101,6 +101,13 @@ void record_object_position(const visual_functionalities::object_qr_positionCons
     }
     else
         ROS_WARN("TRAJECTORY_RECORDER: This qr code is not among the objects to be tracked");
+}
+
+void record_blob_position(const visual_functionalities::object_blob_positionConstPtr& object_position_topic,
+                          Data_config &parameters){
+    parameters.get_blob_positions().push_back({object_position_topic->blob_position.point.x,
+                                               object_position_topic->blob_position.point.y,
+                                               object_position_topic->blob_position.point.z});
 }
 
 void convert_whole_object_positions_vector(Data_config& parameters,
@@ -142,9 +149,9 @@ void convert_whole_object_positions_vector(Data_config& parameters,
 
         try{
             listener.transformPoint(parent_frame, camera_point[i], base_point[i]);
-//            ROS_INFO("kinect2_rgb_optical_frame: (%.2f, %.2f. %.2f) -----> base_link: (%.2f, %.2f, %.2f) at time %.2f",
-//                     camera_point[i].point.x, camera_point[i].point.y, camera_point[i].point.z,
-//                     base_point[i].point.x, base_point[i].point.y, base_point[i].point.z, base_point[i].header.stamp.toSec());
+            //            ROS_INFO("kinect2_rgb_optical_frame: (%.2f, %.2f. %.2f) -----> base_link: (%.2f, %.2f, %.2f) at time %.2f",
+            //                     camera_point[i].point.x, camera_point[i].point.y, camera_point[i].point.z,
+            //                     base_point[i].point.x, base_point[i].point.y, base_point[i].point.z, base_point[i].header.stamp.toSec());
         }
         catch(tf::TransformException& ex){
             ROS_ERROR("Received an exception trying to transform a point from \"camera_depth_optical_frame\" to \"world\": %s", ex.what());
@@ -178,7 +185,7 @@ void record_traj_and_object_position(Data_config& parameters,
         //ROS_INFO("go go go");
         //dispaly_image(not_working_image_path, image_pub);
         if(parameters.get_pressed() && parameters.get_lower_botton_pressed()){
-//        if(parameters.get_start_recording() == 1){
+            //        if(parameters.get_start_recording() == 1){
             if(parameters.get_release()){
                 parameters.set_release(false);
                 parameters.set_toggle(true);
@@ -201,32 +208,40 @@ void record_traj_and_object_position(Data_config& parameters,
                 left_eef_trajectory.push_back(inner_left_traj);
                 old_values = current_values;
 
-                if(parameters.get_objects_positions_map().empty())
-                    for(int i = 0; i < parameters.get_number_of_markers(); i++)
-                        object_position_vector.push_back({0, 0, 0});
-                else if(parameters.get_objects_positions_map().size() != parameters.get_number_of_markers()){
-//                    ROS_WARN_STREAM("TRAJECTORY_RECORDER: There are: " << parameters.get_objects_positions_map().size()
-//                                    << " element in the map, the size of vector of vector is: " );
-//                                    for(auto& x: parameters.get_objects_positions_map())
-//                                    ROS_WARN_STREAM("TRAJECTORY_RECORDER: " << x.second.size());
-                    for(auto& x: parameters.get_objects_positions_map()){
+                if(strcmp(parameters.get_detection_method().c_str(), "qr_code") == 0){
+                    if(parameters.get_objects_positions_map().empty())
+                        for(int i = 0; i < parameters.get_number_of_markers(); i++)
+                            object_position_vector.push_back({0, 0, 0, 0, 0, 0});
+                    else if(parameters.get_objects_positions_map().size() != parameters.get_number_of_markers()){
+                        //                    ROS_WARN_STREAM("TRAJECTORY_RECORDER: There are: " << parameters.get_objects_positions_map().size()
+                        //                                    << " element in the map, the size of vector of vector is: " );
+                        //                                    for(auto& x: parameters.get_objects_positions_map())
+                        //                                    ROS_WARN_STREAM("TRAJECTORY_RECORDER: " << x.second.size());
+                        for(auto& x: parameters.get_objects_positions_map()){
                             //ROS_WARN_STREAM("TRAJECTORY_RECORDER: Size of object position vector is: " << x.second[x.second.size() - 1].size());
-                        object_position_vector.push_back(x.second[x.second.size() - 1]);
+                            object_position_vector.push_back(x.second[x.second.size() - 1]);
+                        }
+                        for(int i = parameters.get_objects_positions_map().size(); i < parameters.get_number_of_markers(); i++)
+                            object_position_vector.push_back({0, 0, 0});
                     }
-                    for(int i = parameters.get_objects_positions_map().size(); i < parameters.get_number_of_markers(); i++)
-                        object_position_vector.push_back({0, 0, 0});
-                }
-                else if(parameters.get_objects_positions_map().size() == parameters.get_number_of_markers()){
-                    for(auto& x: parameters.get_objects_positions_map()){
-                        ROS_WARN_STREAM("TRAJECTORY_RECORDER: Storing the object position with id: "
-                                        << x.first);
-                        for(size_t i = 0; i < x.second[x.second.size() - 1].size(); i++)
-                            ROS_INFO_STREAM("TRAJECTORY_RECORDER: Element" << i << " is: "
-                                            << x.second[x.second.size() - 1][i]);
+                    else if(parameters.get_objects_positions_map().size() == parameters.get_number_of_markers()){
+                        for(auto& x: parameters.get_objects_positions_map()){
+                            ROS_WARN_STREAM("TRAJECTORY_RECORDER: Storing the object position with id: "
+                                            << x.first);
+                            for(size_t i = 0; i < x.second[x.second.size() - 1].size(); i++)
+                                ROS_INFO_STREAM("TRAJECTORY_RECORDER: Element" << i << " is: "
+                                                << x.second[x.second.size() - 1][i]);
 
-                        ROS_WARN("********************************************");
-                        object_position_vector.push_back(x.second[x.second.size() - 1]);
+                            ROS_WARN("********************************************");
+                            object_position_vector.push_back(x.second[x.second.size() - 1]);
+                        }
                     }
+                }
+                else if(strcmp(parameters.get_detection_method().c_str(), "blobs") == 0){
+                    if(parameters.get_blob_positions().empty())
+                        object_position_vector.push_back({0, 0, 0, 0, 0, 0});
+                    else
+                        object_position_vector.push_back(parameters.get_blob_positions()[parameters.get_blob_positions().size() - 1]);
                 }
 
                 //ROS_ERROR_STREAM("this iteration duration is: " << ros::Time::now().toSec() - time_now);
@@ -242,7 +257,7 @@ void record_traj_and_object_position(Data_config& parameters,
             }
         }
         if(parameters.get_toggle() && !parameters.get_lower_botton_pressed()){
-//        if(parameters.get_start_recording() == 2){
+            //        if(parameters.get_start_recording() == 2){
             parameters.set_start_recording(0);
             parameters.set_toggle(false);
             std::vector<std::vector<double>> output_of_conversion;
@@ -254,7 +269,10 @@ void record_traj_and_object_position(Data_config& parameters,
             write_data(parameters, left_eef_trajectory, output_of_conversion, the_eef_file, the_obj_file);
             left_eef_trajectory.clear();
             object_position_vector.clear();
-            parameters.get_objects_positions_map().clear();
+            if(strcmp(parameters.get_detection_method().c_str(), "qr_code") == 0)
+                parameters.get_objects_positions_map().clear();
+            else if(strcmp(parameters.get_detection_method().c_str(), "blobs") == 0)
+                parameters.get_blob_positions().clear();
         }
         rate.sleep();
     }

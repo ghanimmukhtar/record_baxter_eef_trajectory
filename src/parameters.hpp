@@ -17,6 +17,7 @@
 #include <baxter_core_msgs/DigitalIOState.h>
 
 #include <visual_functionalities/object_qr_position.h>
+#include <visual_functionalities/object_blob_position.h>
 #include <boost/bind.hpp>
 
 #include <sensor_msgs/Image.h>
@@ -31,11 +32,12 @@ struct Parameters {
     std::vector<Eigen::Vector3d> object_position_vector;
 
     std::map<int, std::vector<std::vector<double>>> objects_positions_map;
+    std::vector<std::vector<double>> blob_positions;
 
     std::vector<int> markers_id_vector;
 
     std::string object_file_name = "";
-    std::string child_frame, parent_frame;
+    std::string child_frame, parent_frame, detection_method;
 
     ////// ROBOT arm vairables
     // left end effector pose
@@ -72,6 +74,10 @@ public:
         return params.number_of_markers;
     }
 
+    std::vector<std::vector<double>>& get_blob_positions(){
+                                    return params.blob_positions;
+}
+
     std::map<int, std::vector<std::vector<double>>>& get_objects_positions_map(){
                                                   return params.objects_positions_map;
 }
@@ -91,6 +97,10 @@ public:
     std::string& get_object_file_name(){
         return params.object_file_name;
     }
+
+                                                  std::string& get_detection_method(){
+                                                      return params.detection_method;
+                                                  }
 
     Eigen::VectorXd get_left_eef_pose_rpy(){
         return params.left_eef_pose_rpy;
@@ -148,6 +158,10 @@ public:
         params.number_of_markers = number;
     }
 
+                                                  void set_blob_positions(std::vector<std::vector<double>> positions){
+                                                  params.blob_positions = positions;
+}
+
     void set_objects_positions_map(std::map<int, std::vector<std::vector<double>>> map){
          params.objects_positions_map = map;
 }
@@ -163,6 +177,10 @@ public:
     void set_object_file_name(std::string file_name){
         params.object_file_name = file_name;
     }
+
+                                                  void set_detection_method(std::string detection_method){
+                                                      params.detection_method = detection_method;
+                                                  }
 
     void set_left_eef_pose_rpy(Eigen::VectorXd& left_eef_pose_rpy){
         params.left_eef_pose_rpy = left_eef_pose_rpy;
