@@ -26,9 +26,11 @@ void object_qr_position_Callback(const visual_functionalities::object_qr_positio
 }
 
 void object_blob_position_Callback(const visual_functionalities::object_blob_positionConstPtr& object_position){
-    if(parameters.get_pressed() && parameters.get_lower_botton_pressed())
+    if(parameters.get_pressed() && parameters.get_lower_botton_pressed()){
+        ROS_INFO("INDICATIVE TEXT: I am recording blobs");
     //if(parameters.get_start_recording() == 1)
         record_blob_position(object_position, parameters);
+    }
 }
 
 void start_recording_Callback(const std_msgs::Int64ConstPtr& start){

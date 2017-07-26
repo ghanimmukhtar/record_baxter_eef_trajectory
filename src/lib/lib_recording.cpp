@@ -60,9 +60,17 @@ void write_data(Data_config& parameters,
         outter_itr++){
         std::vector<double>::iterator inner_itr;
         for(inner_itr = (*outter_itr).begin(); inner_itr != (*outter_itr).end(); inner_itr++) // eef pos and rotation
-            the_eef_file << (*inner_itr) << ",";
+            the_eef_file << (*inner_itr) << ",";        
 
-        for(size_t i = 0; i < parameters.get_objects_positions_map().size(); i++){ // obj position
+        if(strcmp(parameters.get_detection_method().c_str(), "qr_code") == 0){
+            for(size_t i = 0; i < parameters.get_objects_positions_map().size(); i++){ // obj position
+                for(inner_itr = (*outter_itr_object).begin(); inner_itr != (*outter_itr_object).end(); inner_itr++)
+                    the_obj_file << (*inner_itr) << ",";
+                the_obj_file << 0 << "," << 0 << "," << 0 << ","; // obj rotation
+                ++outter_itr_object;
+            }
+        }
+        else if(strcmp(parameters.get_detection_method().c_str(), "blobs") == 0){
             for(inner_itr = (*outter_itr_object).begin(); inner_itr != (*outter_itr_object).end(); inner_itr++)
                 the_obj_file << (*inner_itr) << ",";
             the_obj_file << 0 << "," << 0 << "," << 0 << ","; // obj rotation
@@ -195,7 +203,10 @@ void record_traj_and_object_position(Data_config& parameters,
             Eigen::VectorXd current_values(6);
             current_values = parameters.get_left_eef_pose_rpy();
             //ROS_INFO_STREAM("TRAJECTORY RECORDER: EEF pose is: " << current_values);
-            if ((current_values - old_values).norm() > parameters.get_epsilon()){
+            if ((current_values - old_values).norm() > 0.05){ //parameters.get_epsilon()){
+                ROS_ERROR_STREAM("Distance between waypoints:" << (current_values - old_values).norm());
+                ROS_ERROR_STREAM("nb_iter:" << nb_iter);
+
                 time_now = ros::Time::now().toSec();
 
                 std::vector<double> inner_left_traj;
@@ -250,21 +261,54 @@ void record_traj_and_object_position(Data_config& parameters,
         }
         else{
             if(parameters.get_toggle()){
-                ROS_ERROR("Hold the two lateral buttons to start the recording.");
+                ROS_ERROR("Release the two lateral buttons to start the recording.");
                 parameters.set_release(true);
                 parameters.set_lower_button_pressed(false);
 
             }
         }
+
+        if(parameters.get_blob_positions().empty())
+            object_position_vector.push_back({0, 0, 0, 0, 0, 0});
+        else
+            object_position_vector.push_back(parameters.get_blob_positions()[parameters.get_blob_positions().size() - 1]);
+
         if(parameters.get_toggle() && !parameters.get_lower_botton_pressed()){
+
+            // always store last eef and obj position
+            Eigen::VectorXd current_values(6);
+            current_values = parameters.get_left_eef_pose_rpy();
+            time_now = ros::Time::now().toSec();
+            std::vector<double> inner_left_traj;
+            inner_left_traj.push_back(current_values(0));
+            inner_left_traj.push_back(current_values(1));
+            inner_left_traj.push_back(current_values(2));
+            inner_left_traj.push_back(current_values(3));
+            inner_left_traj.push_back(current_values(4));
+            inner_left_traj.push_back(current_values(5));
+            left_eef_trajectory.push_back(inner_left_traj);
+            object_position_vector.push_back(parameters.get_blob_positions()[parameters.get_blob_positions().size() - 1]);
+
             //        if(parameters.get_start_recording() == 2){
             parameters.set_start_recording(0);
             parameters.set_toggle(false);
             std::vector<std::vector<double>> output_of_conversion;
             ROS_INFO_STREAM("TRAJECTORY RECORDER: EEF pose vector size is: " << left_eef_trajectory.size());
-            ROS_INFO_STREAM("TRAJECTORY RECORDER: Object position map size is: " << parameters.get_objects_positions_map().size());
-            if(!parameters.get_objects_positions_map().empty())
-                convert_whole_object_positions_vector(parameters, object_position_vector, output_of_conversion);
+            ROS_INFO_STREAM("TRAJECTORY RECORDER: Object position size is: " << parameters.get_blob_positions().size());
+            if(strcmp(parameters.get_detection_method().c_str(), "qr_code") == 0){
+                ROS_INFO_STREAM("STEP: 1");
+                if(!parameters.get_objects_positions_map().empty()){
+                    ROS_INFO_STREAM("STEP: 2");
+                    convert_whole_object_positions_vector(parameters, object_position_vector, output_of_conversion);
+                }
+            }
+            else if(strcmp(parameters.get_detection_method().c_str(), "blobs") == 0){
+                ROS_INFO_STREAM("STEP: 3");
+                if(!parameters.get_blob_positions().empty()){
+                    ROS_INFO_STREAM("STEP: 4");
+                    convert_whole_object_positions_vector(parameters, object_position_vector, output_of_conversion);
+                }
+            }
 
             write_data(parameters, left_eef_trajectory, output_of_conversion, the_eef_file, the_obj_file);
             left_eef_trajectory.clear();
