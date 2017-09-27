@@ -1,7 +1,7 @@
 <launch>
-  <arg name="effect" />
+  <!-- <arg name="effect" />
   <param name="feedback_eef_file" value="$(find record_baxter_eef_trajectory)/feedback/$(arg effect)_eef_file.csv"/>
-  <param name="feedback_obj_file" value="$(find record_baxter_eef_trajectory)/feedback/$(arg effect)_obj_file.csv"/>
+  <param name="feedback_obj_file" value="$(find record_baxter_eef_trajectory)/feedback/$(arg effect)_obj_file.csv"/> -->
 
   <arg name="append" default="false"/>
   <param name="append_record_file" value="$(arg append)"/>

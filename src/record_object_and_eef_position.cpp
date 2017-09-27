@@ -14,10 +14,16 @@ void left_cuf_Callback(baxter_core_msgs::DigitalIOState l_cuf_feedbcak){
 }
 
 //call back to monitor the status of the lower button of the left gripper
-void left_lower_button_Callback(baxter_core_msgs::DigitalIOState l_lower_button_feedbcak){
-    if(l_lower_button_feedbcak.state)
+void left_lower_button_Callback(const baxter_core_msgs::DigitalIOStateConstPtr& l_lower_button_feedbcak){
+    if(l_lower_button_feedbcak->state)
         parameters.set_lower_button_pressed(true);
 }
+
+//Reverse the status of left gripper when the upper button is pushed
+void left_upper_button_Callback(const baxter_core_msgs::DigitalIOStateConstPtr& l_upper_button_feedbcak){
+        if(l_upper_button_feedbcak->state)
+            reverse_left_eef_state(parameters);
+    }
 
 void object_qr_position_Callback(const visual_functionalities::object_qr_positionConstPtr& object_position){
     if(parameters.get_pressed() && parameters.get_lower_botton_pressed())
@@ -31,6 +37,28 @@ void object_blob_position_Callback(const visual_functionalities::object_blob_pos
     //if(parameters.get_start_recording() == 1)
         record_blob_position(object_position, parameters);
     }
+}
+
+void left_gripper_status_Callback(const baxter_core_msgs::EndEffectorStateConstPtr& eef_state){
+    if(eef_state->position > 50){
+//            ROS_INFO("LEFT GRIPPER IS OPEN");
+            parameters.set_left_eef_state(1);
+        }
+    else{
+//            ROS_INFO("LEFT GRIPPER IS CLOSED");
+            parameters.set_left_eef_state(0);
+        }
+}
+
+void right_gripper_status_Callback(const baxter_core_msgs::EndEffectorStateConstPtr& eef_state){
+    if(eef_state->position > 50){
+//            ROS_INFO("RIGHT GRIPPER IS OPEN");
+            parameters.set_right_eef_state(1);
+        }
+    else{
+//            ROS_INFO("RIGHT GRIPPER IS CLOSED");
+            parameters.set_right_eef_state(0);
+        }
 }
 
 //store obj pos vector in parameters
@@ -61,17 +89,23 @@ int main(int argc, char **argv)
   ros::Subscriber sub_l_eef_msg = n.subscribe<baxter_core_msgs::EndpointState>("/robot/limb/left/endpoint_state", 10, left_eef_Callback);
   ros::Subscriber sub_l_cuf_msg = n.subscribe<baxter_core_msgs::DigitalIOState>("/robot/digital_io/left_lower_cuff/state", 10, left_cuf_Callback);
   ros::Subscriber sub_l_lower_button = n.subscribe<baxter_core_msgs::DigitalIOState>("/robot/digital_io/left_lower_button/state", 10, left_lower_button_Callback);
+  ros::Subscriber sub_l_upper_button = n.subscribe<baxter_core_msgs::DigitalIOState>("/robot/digital_io/left_upper_button/state", 10, left_upper_button_Callback);
   ros::Subscriber object_qr_position_sub = n.subscribe<visual_functionalities::object_qr_position>("/object_qr_position", 10, object_qr_position_Callback);
   ros::Subscriber object_blob_position_sub = n.subscribe<visual_functionalities::object_blob_position>("/object_blob_position", 10, object_blob_position_Callback);
+  ros::Subscriber left_gripper_status = n.subscribe<baxter_core_msgs::EndEffectorState>("/robot/end_effector/left_gripper/state", 10, left_gripper_status_Callback);
+  ros::Subscriber right_gripper_status = n.subscribe<baxter_core_msgs::EndEffectorState>("/robot/end_effector/right_gripper/state", 10, right_gripper_status_Callback);
   //ros::Subscriber start_recording_sub = n.subscribe<std_msgs::Int64>("/start_recording", 10, start_recording_Callback);
   ros::Publisher image_publisher = n.advertise<sensor_msgs::Image>("/robot/xdisplay", 1);
 
   ros::Subscriber object_cloud_position_sub = n.subscribe<pcl_tracking::ObjectPosition>("/visual/obj_pos_vector", 1, obj_state_cloud_Callback);
 
+  ros::ServiceClient left_gripper_ac = n.serviceClient<baxter_kinematics::GripperAction>("/baxter_kinematics/gripper_action");
+
   ros::AsyncSpinner my_spinner(4);
   my_spinner.start();
   usleep(1e6);
 
+  parameters.set_left_eef_service_client(left_gripper_ac);
   std::string feedback_eef_file, feedback_obj_file;
   double the_rate;
   n.getParam("the_rate", the_rate);
@@ -88,6 +122,7 @@ int main(int argc, char **argv)
   std::ofstream left_eef_trajectory_file;
   std::ofstream obj_trajectory_file;
   std::vector<std::vector<double>> left_eef_trajectory;
+  std::vector<std::vector<int>> left_eef_state;
 
   if (!append_record_file){
       left_eef_trajectory_file.open(feedback_eef_file, std::ofstream::out | std::ofstream::trunc);
@@ -101,7 +136,7 @@ int main(int argc, char **argv)
 //  std::ofstream left_eef_trajectory_file(feedback_eef_file, std::ofstream::out | std::ofstream::trunc);
 //  std::ofstream obj_trajectory_file(feedback_obj_file, std::ofstream::out | std::ofstream::trunc);
 
-  record_traj_and_object_position(parameters, left_eef_trajectory, image_publisher, left_eef_trajectory_file, obj_trajectory_file);
+  record_traj_and_object_position(parameters, left_eef_trajectory, left_eef_state, image_publisher, left_eef_trajectory_file, obj_trajectory_file);
 
   left_eef_trajectory_file.close();
   obj_trajectory_file.close();

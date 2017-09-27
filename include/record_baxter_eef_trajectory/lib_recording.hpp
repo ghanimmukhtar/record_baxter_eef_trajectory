@@ -26,7 +26,9 @@ void convert_whole_object_positions_vector(Data_config &parameters,
                                            std::vector<Eigen::Vector4d>& object_positions_vector,
                                            std::vector<std::vector<double> > &output_of_conversion);
 
-void write_data(std::vector<std::vector<double>>& left_eef_trajectory_and_object_vector,
+void write_data(Data_config& parameters,
+                std::vector<std::vector<double>>& left_eef_trajectory,
+                std::vector<std::vector<int>>& left_eef_state_vector,
                 std::vector<std::vector<double>>& object_positions_vector,
                 std::ofstream& the_eef_file,
                 std::ofstream& the_obj_file);
@@ -37,6 +39,9 @@ void write_data(std::vector<std::vector<double>>& left_eef_trajectory_and_object
  * */
 void record_traj_and_object_position(Data_config& parameters,
                                      std::vector<std::vector<double> > &left_eef_trajectory,
+                                     std::vector<std::vector<int> > &left_eef_state,
                                      ros::Publisher &image_pub,
                                      std::ofstream &the_file,
                                      std::ofstream &the_obj_file);
+
+void reverse_left_eef_state(Data_config& parameters);
