@@ -33,6 +33,21 @@ void object_blob_position_Callback(const visual_functionalities::object_blob_pos
     }
 }
 
+//store obj pos vector in parameters
+void obj_state_cloud_Callback(const pcl_tracking::ObjectPosition::ConstPtr& topic_message){
+    if(parameters.get_pressed() && parameters.get_lower_botton_pressed()){
+        std::vector< geometry_msgs::PointStamped > raw_pos_vector = topic_message->object_position;
+        std::vector< std::vector<double> > obj_pos_vector(raw_pos_vector.size()-1, std::vector<double>(3));
+        std::vector<double> curr_obj_pos;
+        geometry_msgs::PointStamped curr_raw_obj;
+        curr_raw_obj = raw_pos_vector[0];
+        curr_obj_pos.push_back(curr_raw_obj.point.x);
+        curr_obj_pos.push_back(curr_raw_obj.point.y);
+        curr_obj_pos.push_back(curr_raw_obj.point.z);
+        parameters.push_cloud_state_vector(curr_obj_pos);
+    }
+}
+
 void start_recording_Callback(const std_msgs::Int64ConstPtr& start){
     parameters.set_start_recording(start->data);
 }
@@ -51,6 +66,8 @@ int main(int argc, char **argv)
   //ros::Subscriber start_recording_sub = n.subscribe<std_msgs::Int64>("/start_recording", 10, start_recording_Callback);
   ros::Publisher image_publisher = n.advertise<sensor_msgs::Image>("/robot/xdisplay", 1);
 
+  ros::Subscriber object_cloud_position_sub = n.subscribe<pcl_tracking::ObjectPosition>("/visual/obj_pos_vector", 1, obj_state_cloud_Callback);
+
   ros::AsyncSpinner my_spinner(4);
   my_spinner.start();
   usleep(1e6);
@@ -66,10 +83,23 @@ int main(int argc, char **argv)
   n.getParam("parent_frame", parameters.get_parent_frame());
   parameters.set_the_rate(the_rate);
 
-  std::ofstream left_eef_trajectory_file(feedback_eef_file, std::ofstream::out | std::ofstream::trunc);
-  std::ofstream obj_trajectory_file(feedback_obj_file, std::ofstream::out | std::ofstream::trunc);
-
+  bool append_record_file;
+  n.getParam("append_record_file", append_record_file);
+  std::ofstream left_eef_trajectory_file;
+  std::ofstream obj_trajectory_file;
   std::vector<std::vector<double>> left_eef_trajectory;
+
+  if (!append_record_file){
+      left_eef_trajectory_file.open(feedback_eef_file, std::ofstream::out | std::ofstream::trunc);
+      obj_trajectory_file.open(feedback_obj_file, std::ofstream::out | std::ofstream::trunc);
+  }
+  else{
+      left_eef_trajectory_file.open(feedback_eef_file, std::ofstream::out | std::ofstream::app);
+      obj_trajectory_file.open(feedback_obj_file, std::ofstream::out | std::ofstream::app);
+  }
+
+//  std::ofstream left_eef_trajectory_file(feedback_eef_file, std::ofstream::out | std::ofstream::trunc);
+//  std::ofstream obj_trajectory_file(feedback_obj_file, std::ofstream::out | std::ofstream::trunc);
 
   record_traj_and_object_position(parameters, left_eef_trajectory, image_publisher, left_eef_trajectory_file, obj_trajectory_file);
 

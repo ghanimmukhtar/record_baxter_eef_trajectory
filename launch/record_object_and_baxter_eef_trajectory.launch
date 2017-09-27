@@ -1,13 +1,16 @@
 <launch>
   <arg name="effect" />
-  <param name="the_rate" value="10.0"/>
-  <param name="epsilon" value="0.03"/>
   <param name="feedback_eef_file" value="$(find record_baxter_eef_trajectory)/feedback/$(arg effect)_eef_file.csv"/>
   <param name="feedback_obj_file" value="$(find record_baxter_eef_trajectory)/feedback/$(arg effect)_obj_file.csv"/>
-  <param name="child_frame" value="/camera_rgb_optical_frame"/>
-  <param name="parent_frame" value="/world"/>
-  <param name="detection_method" value="blobs"/>
 
+  <arg name="append" default="false"/>
+  <param name="append_record_file" value="$(arg append)"/>
+
+  <param name="the_rate" value="10.0"/>
+  <param name="epsilon" value="0.03"/>
+  <param name="child_frame" value="/kinect2_link"/>
+  <param name="parent_frame" value="/base"/>
+  <param name="detection_method" value="cloud"/>
 
   <!--node name="record_eef_trajectory_and_object_position_service" pkg="record_baxter_eef_trajectory" type="record_object_and_eef_position" launch-prefix="gdb -ex run -r-args"  output="screen"-->
   <node name="record_eef_trajectory_and_object_position_service" pkg="record_baxter_eef_trajectory" type="record_object_and_eef_position"  output="screen">

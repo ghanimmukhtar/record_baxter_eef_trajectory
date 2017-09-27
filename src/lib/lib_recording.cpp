@@ -76,6 +76,12 @@ void write_data(Data_config& parameters,
             the_obj_file << 0 << "," << 0 << "," << 0 << ","; // obj rotation
             ++outter_itr_object;
         }
+        else if(strcmp(parameters.get_detection_method().c_str(), "cloud") == 0){
+            for(inner_itr = (*outter_itr_object).begin(); inner_itr != (*outter_itr_object).end(); inner_itr++)
+                the_obj_file << (*inner_itr) << ",";
+            the_obj_file << 0 << "," << 0 << "," << 0 << ","; // obj rotation
+            ++outter_itr_object;
+        }
     }
 
     the_eef_file << "\n";
@@ -187,7 +193,7 @@ void record_traj_and_object_position(Data_config& parameters,
     rate.sleep();
     double time_now = 0.0;
     std::vector<std::vector<double> > object_position_vector;
-    std::vector<Eigen::Vector3d> prev_object_position_vector(parameters.get_number_of_markers());
+//    std::vector<Eigen::Vector3d> prev_object_position_vector(parameters.get_number_of_markers());
     int nb_iter = 0;
     while(ros::ok()){
         //ROS_INFO("go go go");
@@ -198,6 +204,9 @@ void record_traj_and_object_position(Data_config& parameters,
                 parameters.set_release(false);
                 parameters.set_toggle(true);
             }
+
+            if(strcmp(parameters.get_detection_method().c_str(), "cloud") == 0)
+                while(parameters.get_cloud_state_vector().empty());
 
             //get current eef pose
             Eigen::VectorXd current_values(6);
@@ -254,6 +263,12 @@ void record_traj_and_object_position(Data_config& parameters,
                     else
                         object_position_vector.push_back(parameters.get_blob_positions()[parameters.get_blob_positions().size() - 1]);
                 }
+                else if(strcmp(parameters.get_detection_method().c_str(), "cloud") == 0){
+//                    while(parameters.get_cloud_state_vector().empty());
+                    object_position_vector.push_back(parameters.get_cloud_state_vector()[parameters.get_cloud_state_vector().size() - 1]);
+                }
+                else
+                    ROS_ERROR_STREAM("record_traj_and_object_position : wrong detection method");
 
                 //ROS_ERROR_STREAM("this iteration duration is: " << ros::Time::now().toSec() - time_now);
             }
@@ -261,17 +276,15 @@ void record_traj_and_object_position(Data_config& parameters,
         }
         else{
             if(parameters.get_toggle()){
-                ROS_ERROR("Release the two lateral buttons to start the recording.");
+                ROS_ERROR("Two lateral buttons released and saving the recording.");
                 parameters.set_release(true);
                 parameters.set_lower_button_pressed(false);
 
             }
         }
 
-        if(parameters.get_blob_positions().empty())
-            object_position_vector.push_back({0, 0, 0, 0, 0, 0});
-        else
-            object_position_vector.push_back(parameters.get_blob_positions()[parameters.get_blob_positions().size() - 1]);
+//ROS_ERROR_STREAM("object_position_vector size : " << object_position_vector.size());
+//ROS_ERROR_STREAM("get_cloud_state_vector size : " << parameters.get_cloud_state_vector().size());
 
         if(parameters.get_toggle() && !parameters.get_lower_botton_pressed()){
 
@@ -287,14 +300,20 @@ void record_traj_and_object_position(Data_config& parameters,
             inner_left_traj.push_back(current_values(4));
             inner_left_traj.push_back(current_values(5));
             left_eef_trajectory.push_back(inner_left_traj);
-            object_position_vector.push_back(parameters.get_blob_positions()[parameters.get_blob_positions().size() - 1]);
+//            object_position_vector.push_back(parameters.get_blob_positions()[parameters.get_blob_positions().size() - 1]);
+            if(strcmp(parameters.get_detection_method().c_str(), "blobs") == 0){
+                object_position_vector.push_back(parameters.get_blob_positions()[parameters.get_blob_positions().size() - 1]);
+            }
+            else if(strcmp(parameters.get_detection_method().c_str(), "cloud") == 0){
+                  object_position_vector.push_back(parameters.get_cloud_state_vector()[parameters.get_cloud_state_vector().size() - 1]);
+            }
 
             //        if(parameters.get_start_recording() == 2){
             parameters.set_start_recording(0);
             parameters.set_toggle(false);
             std::vector<std::vector<double>> output_of_conversion;
             ROS_INFO_STREAM("TRAJECTORY RECORDER: EEF pose vector size is: " << left_eef_trajectory.size());
-            ROS_INFO_STREAM("TRAJECTORY RECORDER: Object position size is: " << parameters.get_blob_positions().size());
+            ROS_INFO_STREAM("TRAJECTORY RECORDER: Object position size is: " << object_position_vector.size());
             if(strcmp(parameters.get_detection_method().c_str(), "qr_code") == 0){
                 ROS_INFO_STREAM("STEP: 1");
                 if(!parameters.get_objects_positions_map().empty()){
@@ -309,14 +328,25 @@ void record_traj_and_object_position(Data_config& parameters,
                     convert_whole_object_positions_vector(parameters, object_position_vector, output_of_conversion);
                 }
             }
+//            else if(strcmp(parameters.get_detection_method().c_str(), "cloud") == 0){
+//                ROS_INFO_STREAM("STEP: 5");
+//                if(!parameters.get_c.empty()){
+//                    ROS_INFO_STREAM("STEP: 6");
+//                    convert_whole_object_positions_vector(parameters, object_position_vector, output_of_conversion);
+//                }
+//            }
 
-            write_data(parameters, left_eef_trajectory, output_of_conversion, the_eef_file, the_obj_file);
+            write_data(parameters, left_eef_trajectory, object_position_vector, the_eef_file, the_obj_file);
+            ROS_INFO_STREAM("Eef values and object values saved");
+
             left_eef_trajectory.clear();
             object_position_vector.clear();
             if(strcmp(parameters.get_detection_method().c_str(), "qr_code") == 0)
                 parameters.get_objects_positions_map().clear();
             else if(strcmp(parameters.get_detection_method().c_str(), "blobs") == 0)
                 parameters.get_blob_positions().clear();
+            else if(strcmp(parameters.get_detection_method().c_str(), "cloud") == 0)
+                parameters.get_cloud_state_vector().clear();
         }
         rate.sleep();
     }

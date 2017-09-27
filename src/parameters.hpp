@@ -18,6 +18,8 @@
 
 #include <visual_functionalities/object_qr_position.h>
 #include <visual_functionalities/object_blob_position.h>
+#include <pcl_tracking/ObjectPosition.h>
+#include <geometry_msgs/PointStamped.h>
 #include <boost/bind.hpp>
 
 #include <sensor_msgs/Image.h>
@@ -33,11 +35,12 @@ struct Parameters {
 
     std::map<int, std::vector<std::vector<double>>> objects_positions_map;
     std::vector<std::vector<double>> blob_positions;
+    std::vector<std::vector<double>> cloud_pos_vector;
 
     std::vector<int> markers_id_vector;
 
     std::string object_file_name = "";
-    std::string child_frame, parent_frame, detection_method;
+    std::string child_frame, parent_frame, detection_method;    
 
     ////// ROBOT arm vairables
     // left end effector pose
@@ -67,6 +70,14 @@ public:
 
     void resize_vectors(int new_size){
         params.markers_id_vector.resize(new_size);
+    }
+
+    std::vector< std::vector<double> > get_cloud_state_vector(){
+        return params.cloud_pos_vector;
+    }
+
+    void push_cloud_state_vector(std::vector<double> cloud_pos_vector_){
+        params.cloud_pos_vector.push_back(cloud_pos_vector_);
     }
 
     //// Getters
