@@ -1,0 +1,8 @@
+__pycache__/
+feedback/
+*.pyc
+*.o
+*.csv
+*.bif
+results/
+*.txt.user
