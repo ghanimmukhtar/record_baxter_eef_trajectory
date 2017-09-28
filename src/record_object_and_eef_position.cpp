@@ -94,7 +94,6 @@ int main(int argc, char **argv)
   ros::Subscriber object_blob_position_sub = n.subscribe<visual_functionalities::object_blob_position>("/object_blob_position", 10, object_blob_position_Callback);
   ros::Subscriber left_gripper_status = n.subscribe<baxter_core_msgs::EndEffectorState>("/robot/end_effector/left_gripper/state", 10, left_gripper_status_Callback);
   ros::Subscriber right_gripper_status = n.subscribe<baxter_core_msgs::EndEffectorState>("/robot/end_effector/right_gripper/state", 10, right_gripper_status_Callback);
-  //ros::Subscriber start_recording_sub = n.subscribe<std_msgs::Int64>("/start_recording", 10, start_recording_Callback);
   ros::Publisher image_publisher = n.advertise<sensor_msgs::Image>("/robot/xdisplay", 1);
 
   ros::Subscriber object_cloud_position_sub = n.subscribe<pcl_tracking::ObjectPosition>("/visual/obj_pos_vector", 1, obj_state_cloud_Callback);
@@ -106,13 +105,14 @@ int main(int argc, char **argv)
   usleep(1e6);
 
   parameters.set_left_eef_service_client(left_gripper_ac);
-  std::string feedback_eef_file, feedback_obj_file;
+  std::string feedback_eef_file, feedback_obj_file, feedback_openness_file;
   double the_rate;
   n.getParam("the_rate", the_rate);
   n.getParam("detection_method", parameters.get_detection_method());
   n.getParam("epsilon", parameters.get_epsilon());
   n.getParam("feedback_eef_file", feedback_eef_file);
   n.getParam("feedback_obj_file", feedback_obj_file);
+  n.getParam("feedback_openness_file", feedback_openness_file);
   n.getParam("child_frame", parameters.get_child_frame());
   n.getParam("parent_frame", parameters.get_parent_frame());
   parameters.set_the_rate(the_rate);
@@ -121,25 +121,32 @@ int main(int argc, char **argv)
   n.getParam("append_record_file", append_record_file);
   std::ofstream left_eef_trajectory_file;
   std::ofstream obj_trajectory_file;
+  std::ofstream openness_trajectory_file;
   std::vector<std::vector<double>> left_eef_trajectory;
   std::vector<std::vector<int>> left_eef_state;
 
   if (!append_record_file){
       left_eef_trajectory_file.open(feedback_eef_file, std::ofstream::out | std::ofstream::trunc);
       obj_trajectory_file.open(feedback_obj_file, std::ofstream::out | std::ofstream::trunc);
+      openness_trajectory_file.open(feedback_openness_file, std::ofstream::out | std::ofstream::trunc);
   }
   else{
       left_eef_trajectory_file.open(feedback_eef_file, std::ofstream::out | std::ofstream::app);
       obj_trajectory_file.open(feedback_obj_file, std::ofstream::out | std::ofstream::app);
+      openness_trajectory_file.open(feedback_openness_file, std::ofstream::out | std::ofstream::app);
   }
 
-//  std::ofstream left_eef_trajectory_file(feedback_eef_file, std::ofstream::out | std::ofstream::trunc);
-//  std::ofstream obj_trajectory_file(feedback_obj_file, std::ofstream::out | std::ofstream::trunc);
-
-  record_traj_and_object_position(parameters, left_eef_trajectory, left_eef_state, image_publisher, left_eef_trajectory_file, obj_trajectory_file);
+  record_traj_and_object_position(parameters,
+                                  left_eef_trajectory,
+                                  left_eef_state,
+                                  image_publisher,
+                                  left_eef_trajectory_file,
+                                  obj_trajectory_file,
+                                  openness_trajectory_file);
 
   left_eef_trajectory_file.close();
   obj_trajectory_file.close();
+  openness_trajectory_file.close();
 
   return 0;
 }

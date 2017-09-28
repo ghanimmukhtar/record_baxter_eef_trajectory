@@ -1,0 +1,3 @@
+ # record_baxter_eef_trajectory
+
+ roslaunch record_baxter_eef_trajectory record_object_and_baxter_eef_trajectory.launch effect:=effect_name

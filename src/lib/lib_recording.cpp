@@ -45,57 +45,65 @@ void get_angles_from_rotation_matrix(tf::Matrix3x3& rotation_matrix,
 
 void write_data(Data_config& parameters,
                 std::vector<std::vector<double>>& left_eef_trajectory,
-                std::vector<std::vector<int>>& left_eef_state_vector,
+                std::vector<std::vector<int>>& left_eef_openness_vector,
                 std::vector<std::vector<double>>& object_positions_vector,
                 std::ofstream& the_eef_file,
-                std::ofstream& the_obj_file){
+                std::ofstream& the_obj_file,
+                std::ofstream& the_openness_file){
         ROS_INFO_STREAM("TRAJECTORY RECORDER: Trying to write data, eef traje is size: "
                         << left_eef_trajectory.size()
                         << " and object_position is: "
                         << object_positions_vector.size());
 
         std::vector<std::vector<double>>::iterator outter_itr;
-        std::vector<std::vector<int>>::iterator outter_itr_eef_state = left_eef_state_vector.begin();
+        std::vector<std::vector<int>>::iterator outter_itr_eef_state = left_eef_openness_vector.begin();
         std::vector<std::vector<double>>::iterator outter_itr_object = object_positions_vector.begin();
+        std::vector<double>::iterator inner_itr_eef;
+        std::vector<int>::iterator inner_itr_eef_openness;
+        std::vector<double>::iterator inner_itr_obj;
         for(outter_itr = left_eef_trajectory.begin();
             outter_itr != left_eef_trajectory.end();
             outter_itr++){
-                std::vector<double>::iterator inner_itr;
-                std::vector<int>::iterator inner_itr_eef_state;
-                for(inner_itr = (*outter_itr).begin(); inner_itr != (*outter_itr).end(); inner_itr++) // eef pos and rotation
-                    the_eef_file << (*inner_itr) << ",";
+                // eef pos
+                for(inner_itr_eef = (*outter_itr).begin(); inner_itr_eef != (*outter_itr).end(); inner_itr_eef++) // eef pos and rotation
+                    the_eef_file << (*inner_itr_eef) << ",";
 
-                // eef state
-                for(inner_itr_eef_state = (*outter_itr_eef_state).begin(); inner_itr_eef_state != (*outter_itr_eef_state).end(); inner_itr_eef_state++){
-                        the_eef_file << (*inner_itr) << ",";
-                        ++outter_itr_eef_state;
-                    }
+                // eef openness
+                for(inner_itr_eef_openness = (*outter_itr_eef_state).begin(); inner_itr_eef_openness != (*outter_itr_eef_state).end(); inner_itr_eef_openness++) // eef gripper state
+                    the_openness_file << (*inner_itr_eef_openness) << ",";
 
-                //object position
+                // object position
                 if(strcmp(parameters.get_detection_method().c_str(), "qr_code") == 0){
                         for(size_t i = 0; i < parameters.get_objects_positions_map().size(); i++){ // obj position
-                                for(inner_itr = (*outter_itr_object).begin(); inner_itr != (*outter_itr_object).end(); inner_itr++)
-                                    the_obj_file << (*inner_itr) << ",";
+                                for(inner_itr_obj = (*outter_itr_object).begin(); inner_itr_obj != (*outter_itr_object).end(); inner_itr_obj++)
+                                    the_obj_file << (*inner_itr_obj) << ",";
                                 the_obj_file << 0 << "," << 0 << "," << 0 << ","; // obj rotation
-                                ++outter_itr_object;
+//                                ++outter_itr_object;
                             }
                     }
                 else if(strcmp(parameters.get_detection_method().c_str(), "blobs") == 0){
-                        for(inner_itr = (*outter_itr_object).begin(); inner_itr != (*outter_itr_object).end(); inner_itr++)
-                            the_obj_file << (*inner_itr) << ",";
+                        for(inner_itr_obj = (*outter_itr_object).begin(); inner_itr_obj != (*outter_itr_object).end(); inner_itr_obj++)
+                            the_obj_file << (*inner_itr_obj) << ",";
                         the_obj_file << 0 << "," << 0 << "," << 0 << ","; // obj rotation
-                        ++outter_itr_object;
+//                        ++outter_itr_object;
                     }
                 else if(strcmp(parameters.get_detection_method().c_str(), "cloud") == 0){
-                        for(inner_itr = (*outter_itr_object).begin(); inner_itr != (*outter_itr_object).end(); inner_itr++)
-                            the_obj_file << (*inner_itr) << ",";
+                        for(inner_itr_obj = (*outter_itr_object).begin(); inner_itr_obj != (*outter_itr_object).end(); inner_itr_obj++)
+                            the_obj_file << (*inner_itr_obj) << ",";
                         the_obj_file << 0 << "," << 0 << "," << 0 << ","; // obj rotation
-                        ++outter_itr_object;
-                    }
-            }
+//                        ++outter_itr_object;
+                } else {
+                    ROS_ERROR_STREAM("Write_data : Unknown detection method ");
+                    exit(-1);
+                }
+
+                ++outter_itr_eef_state;
+                ++outter_itr_object;
+        }
 
         the_eef_file << "\n";
         the_obj_file << "\n";
+        the_openness_file << "\n";
     }
 
 void record_qr_position(const visual_functionalities::object_qr_positionConstPtr& object_position_topic,
@@ -210,180 +218,188 @@ void record_traj_and_object_position(Data_config& parameters,
                                      std::vector<std::vector<int> > &left_eef_state,
                                      ros::Publisher& image_pub,
                                      std::ofstream& the_eef_file,
-                                     std::ofstream& the_obj_file){
+                                     std::ofstream& the_obj_file,
+                                     std::ofstream& the_openness_file){
 
-        Eigen::VectorXd old_values(6);
-        old_values = parameters.get_left_eef_pose_rpy();
-        //ROS_ERROR_STREAM("here old values are: " << old_values);
-        parameters.set_pressed(false);
-        parameters.set_release(true);
-        parameters.set_toggle(false);
-        std::string working_image_path = "/home/ghanim/git/catkin_ws/src/baxter_examples/share/images/working.jpg";
-        std::string not_working_image_path = "/home/ghanim/git/catkin_ws/src/baxter_examples/share/images/finished.jpg";
-        ros::Rate rate(parameters.get_the_rate());
-        rate.sleep();
-        double time_now = 0.0;
-        std::vector<std::vector<double> > object_position_vector;
-        //    std::vector<Eigen::Vector3d> prev_object_position_vector(parameters.get_number_of_markers());
-        int nb_iter = 0;
-        while(ros::ok()){
-                //ROS_INFO("go go go");
-                //dispaly_image(not_working_image_path, image_pub);
-                if(parameters.get_pressed() && parameters.get_lower_botton_pressed()){
-                        //        if(parameters.get_start_recording() == 1){
-                        if(parameters.get_release()){
-                                parameters.set_release(false);
-                                parameters.set_toggle(true);
-                            }
 
-                        if(strcmp(parameters.get_detection_method().c_str(), "cloud") == 0)
-                            while(parameters.get_cloud_state_vector().empty());
+    ROS_ERROR_STREAM("Ready to record trajectory");
 
-                        //get current eef pose
-                        Eigen::VectorXd current_values(6);
-                        current_values = parameters.get_left_eef_pose_rpy();
-                        //ROS_INFO_STREAM("TRAJECTORY RECORDER: EEF pose is: " << current_values);
-                        if ((current_values - old_values).norm() > 0.05){ //parameters.get_epsilon()){
-                                ROS_ERROR_STREAM("Distance between waypoints:" << (current_values - old_values).norm());
-                                ROS_ERROR_STREAM("nb_iter:" << nb_iter);
+    Eigen::VectorXd old_values(6);
+    old_values = parameters.get_left_eef_pose_rpy();
+    //ROS_ERROR_STREAM("here old values are: " << old_values);
+    parameters.set_pressed(false);
+    parameters.set_release(true);
+    parameters.set_toggle(false);
+    std::string working_image_path = "/home/ghanim/git/catkin_ws/src/baxter_examples/share/images/working.jpg";
+    std::string not_working_image_path = "/home/ghanim/git/catkin_ws/src/baxter_examples/share/images/finished.jpg";
+    ros::Rate rate(parameters.get_the_rate());
+    rate.sleep();
+    double time_now = 0.0;
+    std::vector<std::vector<double> > object_position_vector;
+    //    std::vector<Eigen::Vector3d> prev_object_position_vector(parameters.get_number_of_markers());
+    int nb_iter = 0;
+    while(ros::ok()){
+            //ROS_INFO("go go go");
+            //dispaly_image(not_working_image_path, image_pub);
+            if(parameters.get_pressed() && parameters.get_lower_botton_pressed()){
+                    //        if(parameters.get_start_recording() == 1){
+                    if(parameters.get_release()){
+                            parameters.set_release(false);
+                            parameters.set_toggle(true);
+                        }
 
-                                time_now = ros::Time::now().toSec();
+                    if(strcmp(parameters.get_detection_method().c_str(), "cloud") == 0)
+                        while(parameters.get_cloud_state_vector().empty());
 
-                                std::vector<double> inner_left_traj;
-                                inner_left_traj.push_back(current_values(0));
-                                inner_left_traj.push_back(current_values(1));
-                                inner_left_traj.push_back(current_values(2));
-                                inner_left_traj.push_back(current_values(3));
-                                inner_left_traj.push_back(current_values(4));
-                                inner_left_traj.push_back(current_values(5));
-                                left_eef_trajectory.push_back(inner_left_traj);
-                                left_eef_state.push_back({parameters.get_left_eef_state()});
-                                old_values = current_values;
+                    //get current eef pose
+                    Eigen::VectorXd current_values(6);
+                    current_values = parameters.get_left_eef_pose_rpy();
+                    //ROS_INFO_STREAM("TRAJECTORY RECORDER: EEF pose is: " << current_values);
+                    if ((current_values - old_values).norm() > 0.05){ //parameters.get_epsilon()){
+                            ROS_ERROR_STREAM("Distance between waypoints:" << (current_values - old_values).norm());
+                            ROS_ERROR_STREAM("nb_iter:" << nb_iter);
 
-                                if(strcmp(parameters.get_detection_method().c_str(), "qr_code") == 0){
-                                        if(parameters.get_objects_positions_map().empty())
-                                            for(int i = 0; i < parameters.get_number_of_markers(); i++)
-                                                object_position_vector.push_back({0, 0, 0, 0, 0, 0});
-                                        else if(parameters.get_objects_positions_map().size() != parameters.get_number_of_markers()){
-                                                //                    ROS_WARN_STREAM("TRAJECTORY_RECORDER: There are: " << parameters.get_objects_positions_map().size()
-                                                //                                    << " element in the map, the size of vector of vector is: " );
-                                                //                                    for(auto& x: parameters.get_objects_positions_map())
-                                                //                                    ROS_WARN_STREAM("TRAJECTORY_RECORDER: " << x.second.size());
-                                                for(auto& x: parameters.get_objects_positions_map()){
-                                                        //ROS_WARN_STREAM("TRAJECTORY_RECORDER: Size of object position vector is: " << x.second[x.second.size() - 1].size());
-                                                        object_position_vector.push_back(x.second[x.second.size() - 1]);
-                                                    }
-                                                for(int i = parameters.get_objects_positions_map().size(); i < parameters.get_number_of_markers(); i++)
-                                                    object_position_vector.push_back({0, 0, 0});
-                                            }
-                                        else if(parameters.get_objects_positions_map().size() == parameters.get_number_of_markers()){
-                                                for(auto& x: parameters.get_objects_positions_map()){
-                                                        ROS_WARN_STREAM("TRAJECTORY_RECORDER: Storing the object position with id: "
-                                                                        << x.first);
-                                                        for(size_t i = 0; i < x.second[x.second.size() - 1].size(); i++)
-                                                            ROS_INFO_STREAM("TRAJECTORY_RECORDER: Element" << i << " is: "
-                                                                            << x.second[x.second.size() - 1][i]);
+                            time_now = ros::Time::now().toSec();
 
-                                                        ROS_WARN("********************************************");
-                                                        object_position_vector.push_back(x.second[x.second.size() - 1]);
-                                                    }
-                                            }
-                                    }
-                                else if(strcmp(parameters.get_detection_method().c_str(), "blobs") == 0){
-                                        if(parameters.get_blob_positions().empty())
+                            std::vector<double> inner_left_traj;
+                            inner_left_traj.push_back(current_values(0));
+                            inner_left_traj.push_back(current_values(1));
+                            inner_left_traj.push_back(current_values(2));
+                            inner_left_traj.push_back(current_values(3));
+                            inner_left_traj.push_back(current_values(4));
+                            inner_left_traj.push_back(current_values(5));
+                            left_eef_trajectory.push_back(inner_left_traj);
+                            left_eef_state.push_back({parameters.get_left_eef_state()});
+                            old_values = current_values;
+
+                            if(strcmp(parameters.get_detection_method().c_str(), "qr_code") == 0){
+                                    if(parameters.get_objects_positions_map().empty())
+                                        for(int i = 0; i < parameters.get_number_of_markers(); i++)
                                             object_position_vector.push_back({0, 0, 0, 0, 0, 0});
-                                        else
-                                            object_position_vector.push_back(parameters.get_blob_positions()[parameters.get_blob_positions().size() - 1]);
-                                    }
-                                else if(strcmp(parameters.get_detection_method().c_str(), "cloud") == 0){
-                                        //                    while(parameters.get_cloud_state_vector().empty());
-                                        object_position_vector.push_back(parameters.get_cloud_state_vector()[parameters.get_cloud_state_vector().size() - 1]);
-                                    }
-                                else
-                                    ROS_ERROR_STREAM("record_traj_and_object_position : wrong detection method");
+                                    else if(parameters.get_objects_positions_map().size() != parameters.get_number_of_markers()){
+                                            //                    ROS_WARN_STREAM("TRAJECTORY_RECORDER: There are: " << parameters.get_objects_positions_map().size()
+                                            //                                    << " element in the map, the size of vector of vector is: " );
+                                            //                                    for(auto& x: parameters.get_objects_positions_map())
+                                            //                                    ROS_WARN_STREAM("TRAJECTORY_RECORDER: " << x.second.size());
+                                            for(auto& x: parameters.get_objects_positions_map()){
+                                                    //ROS_WARN_STREAM("TRAJECTORY_RECORDER: Size of object position vector is: " << x.second[x.second.size() - 1].size());
+                                                    object_position_vector.push_back(x.second[x.second.size() - 1]);
+                                                }
+                                            for(int i = parameters.get_objects_positions_map().size(); i < parameters.get_number_of_markers(); i++)
+                                                object_position_vector.push_back({0, 0, 0});
+                                        }
+                                    else if(parameters.get_objects_positions_map().size() == parameters.get_number_of_markers()){
+                                            for(auto& x: parameters.get_objects_positions_map()){
+                                                    ROS_WARN_STREAM("TRAJECTORY_RECORDER: Storing the object position with id: "
+                                                                    << x.first);
+                                                    for(size_t i = 0; i < x.second[x.second.size() - 1].size(); i++)
+                                                        ROS_INFO_STREAM("TRAJECTORY_RECORDER: Element" << i << " is: "
+                                                                        << x.second[x.second.size() - 1][i]);
 
-                                //ROS_ERROR_STREAM("this iteration duration is: " << ros::Time::now().toSec() - time_now);
-                            }
-                        nb_iter++;
-                    }
-                else{
-                        if(parameters.get_toggle()){
-                                ROS_ERROR("Two lateral buttons released and saving the recording.");
-                                parameters.set_release(true);
-                                parameters.set_lower_button_pressed(false);
+                                                    ROS_WARN("********************************************");
+                                                    object_position_vector.push_back(x.second[x.second.size() - 1]);
+                                                }
+                                        }
+                                }
+                            else if(strcmp(parameters.get_detection_method().c_str(), "blobs") == 0){
+                                    if(parameters.get_blob_positions().empty())
+                                        object_position_vector.push_back({0, 0, 0, 0, 0, 0});
+                                    else
+                                        object_position_vector.push_back(parameters.get_blob_positions()[parameters.get_blob_positions().size() - 1]);
+                                }
+                            else if(strcmp(parameters.get_detection_method().c_str(), "cloud") == 0){
+                                    //                    while(parameters.get_cloud_state_vector().empty());
+                                    object_position_vector.push_back(parameters.get_cloud_state_vector()[parameters.get_cloud_state_vector().size() - 1]);
+                                }
+                            else
+                                ROS_ERROR_STREAM("record_traj_and_object_position : wrong detection method");
 
-                            }
-                    }
+                            //ROS_ERROR_STREAM("this iteration duration is: " << ros::Time::now().toSec() - time_now);
+                        }
+                    nb_iter++;
+                }
+            else{
+                    if(parameters.get_toggle()){
+                            ROS_ERROR("Two lateral buttons released and saving the recording.");
+                            parameters.set_release(true);
+                            parameters.set_lower_button_pressed(false);
 
-                //ROS_ERROR_STREAM("object_position_vector size : " << object_position_vector.size());
-                //ROS_ERROR_STREAM("get_cloud_state_vector size : " << parameters.get_cloud_state_vector().size());
+                        }
+                }
 
-                if(parameters.get_toggle() && !parameters.get_lower_botton_pressed()){
+            //ROS_ERROR_STREAM("object_position_vector size : " << object_position_vector.size());
+            //ROS_ERROR_STREAM("get_cloud_state_vector size : " << parameters.get_cloud_state_vector().size());
 
-                        // always store last eef and obj position
-                        Eigen::VectorXd current_values(6);
-                        current_values = parameters.get_left_eef_pose_rpy();
-                        time_now = ros::Time::now().toSec();
-                        std::vector<double> inner_left_traj;
-                        inner_left_traj.push_back(current_values(0));
-                        inner_left_traj.push_back(current_values(1));
-                        inner_left_traj.push_back(current_values(2));
-                        inner_left_traj.push_back(current_values(3));
-                        inner_left_traj.push_back(current_values(4));
-                        inner_left_traj.push_back(current_values(5));
-                        left_eef_trajectory.push_back(inner_left_traj);
-                        left_eef_state.push_back({parameters.get_left_eef_state()});
-                        //            object_position_vector.push_back(parameters.get_blob_positions()[parameters.get_blob_positions().size() - 1]);
-                        if(strcmp(parameters.get_detection_method().c_str(), "blobs") == 0){
-                                object_position_vector.push_back(parameters.get_blob_positions()[parameters.get_blob_positions().size() - 1]);
-                            }
-                        else if(strcmp(parameters.get_detection_method().c_str(), "cloud") == 0){
-                                object_position_vector.push_back(parameters.get_cloud_state_vector()[parameters.get_cloud_state_vector().size() - 1]);
-                            }
+            if(parameters.get_toggle() && !parameters.get_lower_botton_pressed()){
 
-                        //        if(parameters.get_start_recording() == 2){
-                        parameters.set_start_recording(0);
-                        parameters.set_toggle(false);
-                        std::vector<std::vector<double>> output_of_conversion;
-                        ROS_INFO_STREAM("TRAJECTORY RECORDER: EEF pose vector size is: " << left_eef_trajectory.size());
-                        ROS_INFO_STREAM("TRAJECTORY RECORDER: EEF state vector size is: " << left_eef_state.size());
-                        ROS_INFO_STREAM("TRAJECTORY RECORDER: Object position size is: " << object_position_vector.size());
-                        if(strcmp(parameters.get_detection_method().c_str(), "qr_code") == 0){
-                                ROS_INFO_STREAM("STEP: 1");
-                                if(!parameters.get_objects_positions_map().empty()){
-                                        ROS_INFO_STREAM("STEP: 2");
-                                        convert_whole_object_positions_vector(parameters, object_position_vector, output_of_conversion);
-                                    }
-                            }
-                        else if(strcmp(parameters.get_detection_method().c_str(), "blobs") == 0){
-                                ROS_INFO_STREAM("STEP: 3");
-                                if(!parameters.get_blob_positions().empty()){
-                                        ROS_INFO_STREAM("STEP: 4");
-                                        convert_whole_object_positions_vector(parameters, object_position_vector, output_of_conversion);
-                                    }
-                            }
-                        //            else if(strcmp(parameters.get_detection_method().c_str(), "cloud") == 0){
-                        //                ROS_INFO_STREAM("STEP: 5");
-                        //                if(!parameters.get_c.empty()){
-                        //                    ROS_INFO_STREAM("STEP: 6");
-                        //                    convert_whole_object_positions_vector(parameters, object_position_vector, output_of_conversion);
-                        //                }
-                        //            }
+                    // always store last eef and obj position
+                    Eigen::VectorXd current_values(6);
+                    current_values = parameters.get_left_eef_pose_rpy();
+                    time_now = ros::Time::now().toSec();
+                    std::vector<double> inner_left_traj;
+                    inner_left_traj.push_back(current_values(0));
+                    inner_left_traj.push_back(current_values(1));
+                    inner_left_traj.push_back(current_values(2));
+                    inner_left_traj.push_back(current_values(3));
+                    inner_left_traj.push_back(current_values(4));
+                    inner_left_traj.push_back(current_values(5));
+                    left_eef_trajectory.push_back(inner_left_traj);
+                    left_eef_state.push_back({parameters.get_left_eef_state()});
+                    //            object_position_vector.push_back(parameters.get_blob_positions()[parameters.get_blob_positions().size() - 1]);
+                    if(strcmp(parameters.get_detection_method().c_str(), "blobs") == 0){
+                            object_position_vector.push_back(parameters.get_blob_positions()[parameters.get_blob_positions().size() - 1]);
+                        }
+                    else if(strcmp(parameters.get_detection_method().c_str(), "cloud") == 0){
+                            object_position_vector.push_back(parameters.get_cloud_state_vector()[parameters.get_cloud_state_vector().size() - 1]);
+                        }
 
-                        write_data(parameters, left_eef_trajectory, left_eef_state, object_position_vector, the_eef_file, the_obj_file);
-                        ROS_INFO_STREAM("Eef values and object values saved");
+                    //        if(parameters.get_start_recording() == 2){
+                    parameters.set_start_recording(0);
+                    parameters.set_toggle(false);
+                    std::vector<std::vector<double>> output_of_conversion;
+                    ROS_INFO_STREAM("TRAJECTORY RECORDER: EEF pose vector size is: " << left_eef_trajectory.size());
+                    ROS_INFO_STREAM("TRAJECTORY RECORDER: EEF state vector size is: " << left_eef_state.size());
+                    ROS_INFO_STREAM("TRAJECTORY RECORDER: Object position size is: " << object_position_vector.size());
+                    if(strcmp(parameters.get_detection_method().c_str(), "qr_code") == 0){
+                            ROS_INFO_STREAM("STEP: 1");
+                            if(!parameters.get_objects_positions_map().empty()){
+                                    ROS_INFO_STREAM("STEP: 2");
+                                    convert_whole_object_positions_vector(parameters, object_position_vector, output_of_conversion);
+                                }
+                        }
+                    else if(strcmp(parameters.get_detection_method().c_str(), "blobs") == 0){
+                            ROS_INFO_STREAM("STEP: 3");
+                            if(!parameters.get_blob_positions().empty()){
+                                    ROS_INFO_STREAM("STEP: 4");
+                                    convert_whole_object_positions_vector(parameters, object_position_vector, output_of_conversion);
+                                }
+                        }
+                    //            else if(strcmp(parameters.get_detection_method().c_str(), "cloud") == 0){
+                    //                ROS_INFO_STREAM("STEP: 5");
+                    //                if(!parameters.get_c.empty()){
+                    //                    ROS_INFO_STREAM("STEP: 6");
+                    //                    convert_whole_object_positions_vector(parameters, object_position_vector, output_of_conversion);
+                    //                }
+                    //            }
 
-                        left_eef_trajectory.clear();
-                        object_position_vector.clear();
-                        if(strcmp(parameters.get_detection_method().c_str(), "qr_code") == 0)
-                            parameters.get_objects_positions_map().clear();
-                        else if(strcmp(parameters.get_detection_method().c_str(), "blobs") == 0)
-                            parameters.get_blob_positions().clear();
-                        else if(strcmp(parameters.get_detection_method().c_str(), "cloud") == 0)
-                            parameters.get_cloud_state_vector().clear();
-                    }
-                rate.sleep();
-            }
+                    write_data(parameters,
+                               left_eef_trajectory,
+                               left_eef_state,
+                               object_position_vector,
+                               the_eef_file,
+                               the_obj_file,
+                               the_openness_file);
+                    ROS_INFO_STREAM("Eef values and object values saved");
 
-
+                    left_eef_trajectory.clear();
+                    object_position_vector.clear();
+                    if(strcmp(parameters.get_detection_method().c_str(), "qr_code") == 0)
+                        parameters.get_objects_positions_map().clear();
+                    else if(strcmp(parameters.get_detection_method().c_str(), "blobs") == 0)
+                        parameters.get_blob_positions().clear();
+                    else if(strcmp(parameters.get_detection_method().c_str(), "cloud") == 0)
+                        parameters.get_cloud_state_vector().clear();
+                }
+            rate.sleep();
     }
+}

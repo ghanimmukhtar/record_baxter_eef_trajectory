@@ -31,7 +31,8 @@ void write_data(Data_config& parameters,
                 std::vector<std::vector<int>>& left_eef_state_vector,
                 std::vector<std::vector<double>>& object_positions_vector,
                 std::ofstream& the_eef_file,
-                std::ofstream& the_obj_file);
+                std::ofstream& the_obj_file,
+                std::ofstream &the_openness_file);
 
 /*Recording method that uses all relevant parameters to control starting/stopping of recording
  * input: the Data_config class
@@ -42,6 +43,7 @@ void record_traj_and_object_position(Data_config& parameters,
                                      std::vector<std::vector<int> > &left_eef_state,
                                      ros::Publisher &image_pub,
                                      std::ofstream &the_file,
-                                     std::ofstream &the_obj_file);
+                                     std::ofstream &the_obj_file,
+                                     std::ofstream &the_openness_file);
 
 void reverse_left_eef_state(Data_config& parameters);
