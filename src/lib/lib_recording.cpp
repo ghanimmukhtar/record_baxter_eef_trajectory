@@ -392,6 +392,7 @@ void record_traj_and_object_position(Data_config& parameters,
                     ROS_INFO_STREAM("Eef values and object values saved");
 
                     left_eef_trajectory.clear();
+                    left_eef_state.clear();
                     object_position_vector.clear();
                     if(strcmp(parameters.get_detection_method().c_str(), "qr_code") == 0)
                         parameters.get_objects_positions_map().clear();

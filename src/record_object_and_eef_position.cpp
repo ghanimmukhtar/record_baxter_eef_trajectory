@@ -21,8 +21,10 @@ void left_lower_button_Callback(const baxter_core_msgs::DigitalIOStateConstPtr& 
 
 //Reverse the status of left gripper when the upper button is pushed
 void left_upper_button_Callback(const baxter_core_msgs::DigitalIOStateConstPtr& l_upper_button_feedbcak){
-        if(l_upper_button_feedbcak->state)
+        if(l_upper_button_feedbcak->state){
             reverse_left_eef_state(parameters);
+            usleep(1e6);
+        }
     }
 
 void object_qr_position_Callback(const visual_functionalities::object_qr_positionConstPtr& object_position){
