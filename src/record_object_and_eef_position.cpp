@@ -63,19 +63,36 @@ void right_gripper_status_Callback(const baxter_core_msgs::EndEffectorStateConst
         }
 }
 
-//store obj pos vector in parameters
+////store obj pos vector in parameters
+//void obj_state_cloud_Callback(const pcl_tracking::ObjectPosition::ConstPtr& topic_message){
+//    if(parameters.get_pressed() && parameters.get_lower_botton_pressed()){
+//        std::vector< geometry_msgs::PointStamped > raw_pos_vector = topic_message->object_position;
+//        std::vector< std::vector<double> > obj_pos_vector(raw_pos_vector.size()-1, std::vector<double>(3));
+//        std::vector<double> curr_obj_pos;
+//        geometry_msgs::PointStamped curr_raw_obj;
+//        curr_raw_obj = raw_pos_vector[0];
+//        curr_obj_pos.push_back(curr_raw_obj.point.x);
+//        curr_obj_pos.push_back(curr_raw_obj.point.y);
+//        curr_obj_pos.push_back(curr_raw_obj.point.z);
+//        parameters.push_cloud_state_vector(curr_obj_pos);
+//    }
+//}
+
+//store obj pos vector in eef values
 void obj_state_cloud_Callback(const pcl_tracking::ObjectPosition::ConstPtr& topic_message){
     if(parameters.get_pressed() && parameters.get_lower_botton_pressed()){
-        std::vector< geometry_msgs::PointStamped > raw_pos_vector = topic_message->object_position;
-        std::vector< std::vector<double> > obj_pos_vector(raw_pos_vector.size()-1, std::vector<double>(3));
+        int curr_obj_id;
+        ros::param::get("curr_obj_id", curr_obj_id);
+//        ROS_ERROR_STREAM("obj_state_cloud_Callback : obj_state_cloud_Callback curr_obj_id: " << curr_obj_id);
         std::vector<double> curr_obj_pos;
-        geometry_msgs::PointStamped curr_raw_obj;
-        curr_raw_obj = raw_pos_vector[0];
-        curr_obj_pos.push_back(curr_raw_obj.point.x);
-        curr_obj_pos.push_back(curr_raw_obj.point.y);
-        curr_obj_pos.push_back(curr_raw_obj.point.z);
+        curr_obj_pos.push_back(topic_message->object_position[0].object_position.point.x);
+        curr_obj_pos.push_back(topic_message->object_position[0].object_position.point.y);
+        curr_obj_pos.push_back(topic_message->object_position[0].object_position.point.z);
         parameters.push_cloud_state_vector(curr_obj_pos);
+//        ROS_ERROR_STREAM("obj_state_cloud_Callback : obj_state_cloud_Callback curr_obj_pos: "
+//                         << curr_obj_pos[0] << " " << curr_obj_pos[1] << " " << curr_obj_pos[2]);
     }
+
 }
 
 void start_recording_Callback(const std_msgs::Int64ConstPtr& start){

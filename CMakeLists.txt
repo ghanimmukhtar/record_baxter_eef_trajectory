@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   visual_functionalities
   message_generation
+  mocap_optitrack
 )
 
 find_package(OpenCV REQUIRED COMPONENTS features2d nonfree)
@@ -31,6 +32,7 @@ find_path(IMAGE_PROCESSING_INCLUDE_DIR image_processing/MotionDetection.h)
 find_library(IMAGE_PROCESSING_LIBRARY NAMES image_processing)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -fPIC")
+
 
 catkin_package(
   INCLUDE_DIRS include
